@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid2';
 import { Box } from '@mui/material';
 import { useMediaQuery } from 'react-responsive';
 import { GameTile } from '../../components/';
+import { GameDimensions, Display } from '../../library/definitions';
 
 enum TileSkin {
     Sand = "sand",
@@ -12,28 +13,9 @@ enum TileSkin {
     Body = "body"
 }
 
-interface Dimension {
-    columns: number;
-    rows: number;
-}
-
-enum Display {
-    Mobile = 'mobile',
-    Tablet = 'tablet',
-    Desktop = 'desktop'
-}
-
-const gridDimensions: Record<string, Dimension> = {
-    [Display.Mobile]: { columns: 15, rows: 10 },
-    [Display.Tablet]: { columns: 20, rows: 11 },
-    [Display.Desktop]: { columns: 30, rows: 15 }
-}
-
 function GameBoard() {
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isTablet = useMediaQuery({ query: '(max-width: 1024px)' });
-
-    const displaySize: Display = isMobile ? Display.Mobile : isTablet ? Display.Tablet : Display.Desktop;
     
     const [tileSize, setTileSize] = useState(20); // Default size
     const [rows, setRows] = useState<number>(0);
@@ -41,8 +23,14 @@ function GameBoard() {
 
 
   useEffect(() => {
-    const numRows = gridDimensions[displaySize].rows;
-    const numColumns = gridDimensions[displaySize].columns;
+    const displaySize: Display = isMobile 
+    ? Display.Mobile 
+    : isTablet 
+      ? Display.Tablet 
+      : Display.Desktop;
+      
+    const numRows = GameDimensions[displaySize].rows;
+    const numColumns = GameDimensions[displaySize].columns;
 
     setRows(numRows);
     setColumns(numColumns);
@@ -67,11 +55,11 @@ function GameBoard() {
     window.addEventListener("resize", updateTileSize);
     return () => window.removeEventListener("resize", updateTileSize);
 
-  }, [displaySize]);
+  }, [isMobile, isTablet]);
 
     return (
         <>
-         <Box id="game-board" >
+         <Box data-testid="game-board" >
             {/* 
             Suggested Grid Sizes:
                 - Small Screens (Mobile):
@@ -82,7 +70,6 @@ function GameBoard() {
                   30x15: Allows for more complex movement and strategies. 
             */}
 
-            {displaySize}
             <Grid 
                 container 
                 direction={'column'} 
