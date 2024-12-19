@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import { GameProvider } from './GameContext'
 import './App.css';
 import { GameBoard } from './components';
 
@@ -29,10 +30,12 @@ function App() {
 
   return (
     <div className="App">
-      <h1 className="text-3xl font-bold underline">Beneath the Sands Introduction</h1>
-      <h2 className="text-2xl">Level Cutscene (loading screen)</h2>
-      <GameBoard windowSize={windowSize} />
-      <h4 className="text-lg">Inside Game board will be GameTile component (food/sand/worm/etc.)</h4>
+      <GameProvider>
+        <h1 className="text-3xl font-bold underline">Beneath the Sands Introduction</h1>
+        <h2 className="text-2xl">Level Cutscene (loading screen)</h2>
+
+        <GameBoard windowSize={windowSize} />
+      </GameProvider>
     </div>
   );
 }

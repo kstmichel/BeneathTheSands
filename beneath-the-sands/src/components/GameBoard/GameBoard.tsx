@@ -1,10 +1,10 @@
 import React, {useState, useEffect} from 'react';
 import Grid from '@mui/material/Grid2';
-import { Box } from '@mui/material';
-import { useMediaQuery } from 'react-responsive';
+import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
 import { GameDimensions, Display } from '../../library/definitions';
 import { getTotalTiles } from '../../library/utils';
+import { useGameContext } from '../../GameContext';
 
 enum TileSkin {
     Sand = "sand",
@@ -22,8 +22,10 @@ interface GameBoardProps {
 }
 
 function GameBoard({windowSize}: GameBoardProps) {
-    const isMobile = windowSize.width <= 768 //useMediaQuery({ query: '(max-width: 768px)' });
-    const isTablet = windowSize.width <= 1024 //useMediaQuery({ query: '(max-width: 1024px)' });
+    const { level, wormLength, score, foodEaten, gameOver, gameWon } = useGameContext();
+
+    const isMobile = windowSize.width <= 768;
+    const isTablet = windowSize.width <= 1024;
     
     const [displaySize, setDisplaySize] = useState<Display | null>(null);
     const [totalTiles, setTotalTiles] = useState<number>(0);
@@ -38,8 +40,6 @@ function GameBoard({windowSize}: GameBoardProps) {
     : isTablet 
       ? Display.Tablet 
       : Display.Desktop;
-
-      console.log(displaySize);
 
     setDisplaySize(displaySize);
     setTotalTiles(getTotalTiles(displaySize));
@@ -85,6 +85,19 @@ function GameBoard({windowSize}: GameBoardProps) {
                   30x15: Allows for more complex movement and strategies. 
             */}
             {displaySize}: {totalTiles} tiles
+
+            <Box className="justify-start text-left absolute bottom-8 left-8 ">
+                <Typography variant="h6" style={{fontWeight: '600'}}>Beneath the Sands</Typography>
+                <ul>
+                    <li>Level: {level}</li>
+                    <li>Worm Length: {wormLength}</li>
+                    <li>Food Eaten: {foodEaten}</li>
+                    <li>Score: {score}</li>
+                    <li>Game Over: {String(gameOver)}</li>
+                    <li>Game Won: {String(gameWon)}</li>
+                </ul>
+            </Box>
+
             <Grid 
                 container 
                 direction={'column'} 
