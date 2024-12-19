@@ -16,7 +16,7 @@ interface GameContextProps {
   oopsYouLost: () => void;
 }
 
-const initialWormLength = 3;
+const initialWormLength = 4;
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
 
