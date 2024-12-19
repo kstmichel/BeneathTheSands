@@ -50,46 +50,35 @@ function GameBoard({windowSize}: GameBoardProps) {
     const [grid, setGrid] = useState<string[][]>([]);
     const [wormPosition, setWormPosition] = useState<{[key in WormAnatomy]: {row: number, col: number}[]} | null>(null);
 
-  useEffect(() => {
-    const displaySize: Display = isMobile 
-    ? Display.Mobile 
-    : isTablet 
-      ? Display.Tablet 
-      : Display.Desktop;
+    const initializeGrid = (displaySize: Display) => {
+        setDisplaySize(displaySize);
+        setTotalTiles(getTotalTiles(displaySize)); 
 
-    setDisplaySize(displaySize);
-    setTotalTiles(getTotalTiles(displaySize));
-
-    const numRows = GameDimensions[displaySize].rows;
-    const numColumns = GameDimensions[displaySize].columns;
-
-    setRows(numRows);
-    setColumns(numColumns);
-
-    const updateTileSize = () => {
-      const containerWidth = window.innerWidth * 0.9; // 90% of viewport width
-      const containerHeight = window.innerHeight * 0.9; // 90% of viewport height
-
-      // Calculate the maximum possible size for a square tile
-      const size = Math.min(
-        containerWidth / numColumns,
-        containerHeight / numRows
-      );
-
-      setTileSize(size);
+        setRows(GameDimensions[displaySize].rows);
+        setColumns(GameDimensions[displaySize].columns);
     };
 
-    // Initial size calculation
-    updateTileSize();
+    const updateTileSize = (numRows: number, numCols: number) => {
+        const containerWidth = window.innerWidth * 0.9; // 90% of viewport width
+        const containerHeight = window.innerHeight * 0.9; // 90% of viewport height
 
-    // Initialize the grid tile skins
-    const updateGrid = () => {
+        // Calculate the maximum possible size for a square tile
+        const size = Math.min(
+            containerWidth / numCols,
+            containerHeight / numRows
+        );
+
+        setTileSize(size);
+    };
+
+
+    const updateTileBackground = (numRows: number, numColumns: number) => {
         // only update the grid if the initial render has occurred
         if (initialRef.current) {
             initialRef.current = false;
 
             // Set initial grid with sand tiles
-            const initialGrid = Array.from({ length: numRows }, () =>
+            const initialDesertGrid = Array.from({ length: numRows }, () =>
                 Array.from({ length: numColumns }, () => TileSkin.Sand)
             );
 
@@ -116,7 +105,7 @@ function GameBoard({windowSize}: GameBoardProps) {
             //      not the same as the worm position.
             setWormPosition(wormStartPosition);
             
-            const reskinGrid = initialGrid.map((row, rowIndex) => {
+            const reskinGrid = initialDesertGrid.map((row, rowIndex) => {
                 return row.map((tileSkin, columnIndex) => {
 
                     // Check if the current tile is part of the worm
@@ -148,15 +137,31 @@ function GameBoard({windowSize}: GameBoardProps) {
             setGrid(reskinGrid);    
         }
     }
+        
+    useEffect(() => {
+        // Initialize the grid based on the display size
+        const displaySize: Display = isMobile 
+            ? Display.Mobile 
+            : isTablet 
+            ? Display.Tablet 
+            : Display.Desktop;
 
-    updateGrid();
+        initializeGrid(displaySize);
 
-    // Update size on window resize
-    window.addEventListener("resize", updateTileSize);
-    return () => window.removeEventListener("resize", updateTileSize);
+        const numRows = GameDimensions[displaySize].rows;
+        const numColumns = GameDimensions[displaySize].columns;
 
-  }, [isMobile, isTablet]);
+        // Initial size calculation
+        updateTileSize(numRows, numColumns);
 
+        updateTileBackground(numRows, numColumns);
+
+        // Update size on window resize
+        const handleResize = () => updateTileSize(numRows, numColumns);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+
+    }, [isMobile, isTablet]);
 
     return (
         <>
