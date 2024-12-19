@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import { useMediaQuery } from 'react-responsive';
 import { GameTile } from '../../components/';
 import { GameDimensions, Display } from '../../library/definitions';
+import { getTotalTiles } from '../../library/utils';
 
 enum TileSkin {
     Sand = "sand",
@@ -13,10 +14,19 @@ enum TileSkin {
     Body = "body"
 }
 
-function GameBoard() {
-    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
-    const isTablet = useMediaQuery({ query: '(max-width: 1024px)' });
+interface GameBoardProps {
+    windowSize: {
+        width: number;
+        height: number;
+    }
+}
+
+function GameBoard({windowSize}: GameBoardProps) {
+    const isMobile = windowSize.width <= 768 //useMediaQuery({ query: '(max-width: 768px)' });
+    const isTablet = windowSize.width <= 1024 //useMediaQuery({ query: '(max-width: 1024px)' });
     
+    const [displaySize, setDisplaySize] = useState<Display | null>(null);
+    const [totalTiles, setTotalTiles] = useState<number>(0);
     const [tileSize, setTileSize] = useState(20); // Default size
     const [rows, setRows] = useState<number>(0);
     const [columns, setColumns] = useState<number>(0);
@@ -28,7 +38,12 @@ function GameBoard() {
     : isTablet 
       ? Display.Tablet 
       : Display.Desktop;
-      
+
+      console.log(displaySize);
+
+    setDisplaySize(displaySize);
+    setTotalTiles(getTotalTiles(displaySize));
+
     const numRows = GameDimensions[displaySize].rows;
     const numColumns = GameDimensions[displaySize].columns;
 
@@ -69,7 +84,7 @@ function GameBoard() {
                 - Large Screens (Desktops):
                   30x15: Allows for more complex movement and strategies. 
             */}
-
+            {displaySize}: {totalTiles} tiles
             <Grid 
                 container 
                 direction={'column'} 

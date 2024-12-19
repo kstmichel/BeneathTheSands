@@ -18,6 +18,7 @@ interface GameTileProps {
 const GameTile = ({skin, size, children, onCollision}: GameTileProps) => {
     return (
         <Grid 
+            data-testid="game-tile"
             className={`grid-item border-black border-2
             ${    skin === TileSkin.Food ? 'bg-red' 
                 : skin === TileSkin.Head ? 'bg-black'
