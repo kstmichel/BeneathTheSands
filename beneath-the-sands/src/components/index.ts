@@ -1,5 +1,7 @@
 import GameBoard from './GameBoard';
+import GameTile from './GameTile';
 
 export {
-    GameBoard
+    GameBoard,
+    GameTile
 };
