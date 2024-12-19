@@ -19,11 +19,11 @@ const GameTile = ({skin, size, children, onCollision}: GameTileProps) => {
     return (
         <Grid 
             data-testid="game-tile"
-            className={`grid-item border-black border-2
-            ${    skin === TileSkin.Food ? 'bg-red' 
+            className={`grid-item border-orange-200 border-2
+            ${    skin === TileSkin.Food ? 'bg-red-500' 
                 : skin === TileSkin.Head ? 'bg-black'
                 : skin === TileSkin.Body ? 'bg-white'
-                : skin === TileSkin.Tail ? 'bg-green'
+                : skin === TileSkin.Tail ? 'bg-gray-500'
             : 'bg-orange-300'
             }`}
             style={{width: size, height: size}}
