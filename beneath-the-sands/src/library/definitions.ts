@@ -1,6 +1,6 @@
 
 
-export enum Display {
+export enum Device {
     Mobile = 'mobile',
     Tablet = 'tablet',
     Desktop = 'desktop'
@@ -11,16 +11,16 @@ export interface Dimension {
     rows: number;
 }
 
-export const GameDimensions: Record<Display, Dimension> = {
-    [Display.Mobile]: {
+export const GameDimensions: Record<Device, Dimension> = {
+    [Device.Mobile]: {
         columns: 15,
         rows: 10
     },
-    [Display.Tablet]: {
+    [Device.Tablet]: {
         columns: 20,
         rows: 11
     },
-    [Display.Desktop]: {
+    [Device.Desktop]: {
         columns: 30,
         rows: 15
     }

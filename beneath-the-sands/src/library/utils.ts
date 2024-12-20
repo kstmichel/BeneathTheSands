@@ -1,3 +1,3 @@
-import { GameDimensions, Display } from './definitions';
+import { GameDimensions, Device } from './definitions';
 
-export const getTotalTiles = (display: Display): number => GameDimensions[display].columns * GameDimensions[display].rows;
+export const getTotalTiles = (device: Device): number => GameDimensions[device].columns * GameDimensions[device].rows;
