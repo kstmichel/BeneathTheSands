@@ -2,59 +2,10 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameDimensions, Device, Direction} from '../../library/definitions';
+import { GameDimensions, Device, Direction, GridCoordinates, WormAnatomy, WormSegment, TileTexture} from '../../library/definitions';
 import { getTotalTiles, getLastItem } from '../../library/utils';
 import { useGameContext } from '../../GameContext';
-
-enum TileSkin {
-    SAND = "sand",
-    FOOD = "food", 
-    HEAD = "head", 
-    TAIL = "tail", 
-    BODY = "body"
-};
-
-enum WormAnatomy {
-    HEAD = "head",
-    BODY = "body",
-    TAIL = "tail"
-}
-
-interface GridCoordinates {
-    row: number;
-    column: number;
-}
-
-interface WormSegment {
-    key: number,
-    part: WormAnatomy,
-    location: GridCoordinates
-}
-
-type WormLocationByPart = WormSegment[];
-
-const initialWormLocationByParts: WormLocationByPart = [
-    { 
-        key: 0,
-        part: WormAnatomy.HEAD,
-        location: { row: 7, column: 10} 
-    },
-    { 
-        key: 1,
-        part: WormAnatomy.BODY,
-        location: { row: 7, column: 9} 
-    }, 
-    { 
-        key: 2,
-        part: WormAnatomy.BODY,
-        location: { row: 7, column: 8} 
-    },
-    { 
-        key: 3,
-        part: WormAnatomy.TAIL,
-        location: {row: 7, column: 7} 
-    },
-];
+import locationData from '../../library/data.json';
 
 const initialWormDirection = Direction.RIGHT;
 
@@ -67,6 +18,17 @@ interface GameBoardProps {
 
 function GameBoard({windowSize}: GameBoardProps) {
     const initialRef = useRef(true);
+
+    const wormLocationBySegment: WormSegment[] = locationData.map((segment) => {
+        const part = Object.values(WormAnatomy).find((value) => value === segment.part);
+        if (!part) {
+            throw new Error(`Invalid worm part: ${segment.part}`);
+        }
+        return {
+            ...segment,
+            part
+        };
+    });
 
     const { level, wormLength, score, foodEaten, gameOver, gameWon } = useGameContext();
 
@@ -81,13 +43,13 @@ function GameBoard({windowSize}: GameBoardProps) {
     const [columns, setColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
     const [wormDirection, setWormDirection] = useState<Direction>(initialWormDirection);
-    const [wormLocation, setWormLocation] = useState<WormLocationByPart>(initialWormLocationByParts);
+    const [wormLocation, setWormLocation] = useState<WormSegment[]>(wormLocationBySegment);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
 
     // const [inputDirection, setInputDirection] = useState<Direction | null>(null);
 
-    const renderSandWormMovement = useCallback((newWormLocation: WormLocationByPart) => {
+    const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
             This function expects wormLocation to have updated segment locations 
             for each part (head/body/tail) of the Sandworm. Now we are updating the game board
@@ -106,22 +68,22 @@ function GameBoard({windowSize}: GameBoardProps) {
             updatedGrid[row] = [...updatedGrid[row]];
             updatedGrid[row][column] = part;
             
-            // reset old tail with sand skin to give sandworm the illusion of moving across sand.
+            // reset old tail with sand texture to give sandworm the illusion of moving across sand.
             if (part === 'tail') {
                 const tailDirection = getLastItem(wormPath);
 
                 switch (tailDirection) {
                     case Direction.RIGHT:
-                        updatedGrid[row][column - 1] = TileSkin.SAND;
+                        updatedGrid[row][column - 1] = TileTexture.SAND;
                         break;
                     case Direction.LEFT:
-                        updatedGrid[row][column + 1] = TileSkin.SAND;
+                        updatedGrid[row][column + 1] = TileTexture.SAND;
                         break;
                     case Direction.UP:
-                        updatedGrid[row + 1][column] = TileSkin.SAND;
+                        updatedGrid[row + 1][column] = TileTexture.SAND;
                         break;
                     case Direction.DOWN:
-                        updatedGrid[row - 1][column] = TileSkin.SAND;
+                        updatedGrid[row - 1][column] = TileTexture.SAND;
                         break;
                 }
             }
@@ -219,7 +181,7 @@ function GameBoard({windowSize}: GameBoardProps) {
         // Update the location of each segment based on the segment direction. 
         newWormLocation = await Promise.all(newWormLocation.map(async (segment) => {
 
-            let updatedSegment = { ...segment };
+            let updatedSegment: WormSegment = { ...segment };
             let updatedPath = wormPath;
             let segmentDirection: Direction = wormDirection;
 
@@ -290,14 +252,14 @@ function GameBoard({windowSize}: GameBoardProps) {
     }, [wormLocation, renderSandWormMovement, getRandomDirectionBasedOnMovement, wormPath, validateNextMove, getWormPathDirection, wormDirection]);
 
     const generateTileSkinGrid = useCallback(async(rows: number, columns: number) => {
-        const gridArrayOfTileSkinString = Array.from({ length: rows }, () =>
-            Array.from({ length: columns }, () => TileSkin.SAND));
+        let desertTextureGrid = Array.from({ length: rows }, () =>
+            Array.from({ length: columns }, () => TileTexture.SAND));
     
-        const gridSkinsArray = gridArrayOfTileSkinString.map((row, rowIndex) => {
+        const desertWithGameAssets = desertTextureGrid.map((row, rowIndex) => {
 
             return row.map((column, columnIndex) => {
 
-                if (!wormLocation) return TileSkin.SAND;
+                if (!wormLocation) return TileTexture.SAND;
 
                 // Check if the current tile is part of the worm
                 const wormPart = wormLocation.find((segment): segment is WormSegment => {
@@ -325,14 +287,14 @@ function GameBoard({windowSize}: GameBoardProps) {
                 });
 
                 if (foodLocationDetected) {
-                    return TileSkin.FOOD;
+                    return TileTexture.FOOD;
                 }
 
                 return column;
             });
         });
         
-        return gridSkinsArray;
+        return desertWithGameAssets;
      }, [wormLocation]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
@@ -349,9 +311,9 @@ function GameBoard({windowSize}: GameBoardProps) {
         setRows(rows);
         setColumns(columns);
 
-        const gridSkinsArray = await generateTileSkinGrid(rows, columns);
+        const gridTexture = await generateTileSkinGrid(rows, columns);
 
-        setGrid(gridSkinsArray);
+        setGrid(gridTexture);
 
         let initialWormPath: Direction[] = [];
 
@@ -460,8 +422,9 @@ function GameBoard({windowSize}: GameBoardProps) {
                             {row.map((tile, columnIndex) => (
                                 <GameTile 
                                     key={columnIndex}
-                                    skin={tile as TileSkin} 
+                                    texture={tile as TileTexture} 
                                     size={tileSize}         
+                                    coordinate={{row: rowIndex, column: columnIndex}}
                                     onCollision={()=> console.log('collision')} />
                             ))}
                         </Grid>

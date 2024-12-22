@@ -26,9 +26,34 @@ export const GameDimensions: Record<Device, Dimension> = {
     }
 }
 
+export interface GridCoordinates {
+    row: number;
+    column: number;
+}
+
 export enum Direction {
     UP = "UP",
     DOWN = "DOWN", 
     LEFT = "LEFT",
     RIGHT = "RIGHT"
+}
+
+export enum TileTexture {
+    SAND = "sand",
+    FOOD = "food", 
+    HEAD = "head", 
+    TAIL = "tail", 
+    BODY = "body"
+};
+
+export enum WormAnatomy {
+    HEAD = "head",
+    BODY = "body",
+    TAIL = "tail"
+}
+
+export interface WormSegment {
+    key: number,
+    part: WormAnatomy,
+    location: GridCoordinates
 }

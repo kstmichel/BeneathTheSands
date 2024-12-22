@@ -1,31 +1,21 @@
 import Grid from '@mui/material/Grid2';
-
-enum TileSkin {
-    SAND = "sand",
-    FOOD = "food", 
-    HEAD = "head", 
-    TAIL = "tail", 
-    BODY = "body"
-}
+import { TileTexture, GridCoordinates } from '../../library/definitions';
 
 export interface GameTileProps {
-    skin: TileSkin;
+    texture: TileTexture;
     size: number;
+    coordinate: GridCoordinates;
     children?: React.ReactNode;
     onCollision: () => void;
 }
 
-const GameTile = ({skin, size, children, onCollision}: GameTileProps) => {
+const GameTile = ({texture, size, coordinate, children, onCollision}: GameTileProps) => {
+    const {row, column} = coordinate;
+
     return (
         <Grid 
-            data-testid="game-tile"
-            className={`grid-item border-orange-200 border-2
-            ${    skin === TileSkin.FOOD ? 'bg-red-500' 
-                : skin === TileSkin.HEAD ? 'bg-black'
-                : skin === TileSkin.BODY ? 'bg-white'
-                : skin === TileSkin.TAIL ? 'bg-gray-500'
-            : 'bg-orange-300'
-            }`}
+            data-testid={`tile-${row}-${column}`}
+            className={`grid-item border-orange-200 border-2 tile-texture--${texture}`}
             style={{width: size, height: size}}
         >
                 <div className="grid-item-content">

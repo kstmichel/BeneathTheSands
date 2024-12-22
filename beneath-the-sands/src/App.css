@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+
+.tile-texture--food {
+  background-color: red;
+}
+
+.tile-texture--head {
+  background-color: black;
+}
+
+.tile-texture--body {
+  background-color: white;
+}
+
+.tile-texture--tail {
+  background-color: grey;
+}
+
+.tile-texture--sand {
+  background-color: #fabe4f;
+}
+
