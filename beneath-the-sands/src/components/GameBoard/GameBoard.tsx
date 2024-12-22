@@ -2,8 +2,8 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameDimensions, Device } from '../../library/definitions';
-import { getTotalTiles } from '../../library/utils';
+import { GameDimensions, Device, Direction} from '../../library/definitions';
+import { getTotalTiles, getLastItem } from '../../library/utils';
 import { useGameContext } from '../../GameContext';
 
 enum TileSkin {
@@ -12,14 +12,7 @@ enum TileSkin {
     HEAD = "head", 
     TAIL = "tail", 
     BODY = "body"
- };
-
-enum WormDirection {
-    UP = "up",
-    DOWN = "down",
-    LEFT = "left",
-    RIGHT = "right"
-}
+};
 
 enum WormAnatomy {
     HEAD = "head",
@@ -27,7 +20,43 @@ enum WormAnatomy {
     TAIL = "tail"
 }
 
-type IWormPosition = Record<WormAnatomy, { row: number, column: number }[]>;
+interface GridCoordinates {
+    row: number;
+    column: number;
+}
+
+interface WormSegment {
+    key: number,
+    part: WormAnatomy,
+    location: GridCoordinates
+}
+
+type WormLocationByPart = WormSegment[];
+
+const initialWormLocationByParts: WormLocationByPart = [
+    { 
+        key: 0,
+        part: WormAnatomy.HEAD,
+        location: { row: 7, column: 10} 
+    },
+    { 
+        key: 1,
+        part: WormAnatomy.BODY,
+        location: { row: 7, column: 9} 
+    }, 
+    { 
+        key: 2,
+        part: WormAnatomy.BODY,
+        location: { row: 7, column: 8} 
+    },
+    { 
+        key: 3,
+        part: WormAnatomy.TAIL,
+        location: {row: 7, column: 7} 
+    },
+];
+
+const initialWormDirection = Direction.RIGHT;
 
 interface GameBoardProps {
     windowSize: {
@@ -43,7 +72,7 @@ function GameBoard({windowSize}: GameBoardProps) {
 
     const isMobile = windowSize.width <= 768;
     const isTablet = windowSize.width <= 1024;
-    
+
     const [deviceSize, setDeviceType] = useState<Device | null>(null); //TODO: Can be removed after development
 
     const [totalTiles, setTotalTiles] = useState<number>(0);
@@ -51,88 +80,214 @@ function GameBoard({windowSize}: GameBoardProps) {
     const [rows, setRows] = useState<number>(0);
     const [columns, setColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
-    const [wormPosition, setWormPosition] = useState<IWormPosition | null>({
-        [WormAnatomy.HEAD]: [{ row: 7, column: 5 }],
-        [WormAnatomy.BODY]: [
-            { row: 7, column: 4 }, 
-            { row: 7, column: 3 }
-        ],
-        [WormAnatomy.TAIL]: [{ row: 7, column: 2 }],
-    });
-    const [wormDirection, setWormDirection] = useState<WormDirection>(WormDirection.RIGHT);
-    // const [inputDirection, setInputDirection] = useState<WormDirection | null>(null);
+    const [wormDirection, setWormDirection] = useState<Direction>(initialWormDirection);
+    const [wormLocation, setWormLocation] = useState<WormLocationByPart>(initialWormLocationByParts);
+    const [tempGameOver, setTempGameOver] = useState<boolean>(false);
+    const [wormPath, setWormPath] = useState<Direction[]>([]);
 
-    const renderSandWormMovement = useCallback((newWormPosition: IWormPosition) => {
-            /* So we have the new coordinates for the head, body, and tail of the sandworm.
-               Now we need to update the tiles affected with the correct tile skin
-               and reset the old position coordinates to sand (the previous tail position).
-            */
+    // const [inputDirection, setInputDirection] = useState<Direction | null>(null);
 
-            if(!grid || grid.length === 0 || !newWormPosition) return;
+    const renderSandWormMovement = useCallback((newWormLocation: WormLocationByPart) => {
+         /*
+            This function expects wormLocation to have updated segment locations 
+            for each part (head/body/tail) of the Sandworm. Now we are updating the game board
+            tiles with the new location of the Sandworm.
+        */
+       
+        if (!grid || grid.length === 0 || !newWormLocation) return;
 
-            let updatedGrid = [...grid];
+        let updatedGrid = [...grid];
 
-            Object.keys(newWormPosition).forEach((part) => {
-                // we don't want to get a new array for worm position, we want to update the tiles affected... 
-                newWormPosition[part as WormAnatomy].forEach((coordinate) => {  
-                    const { row, column } = coordinate;
-                    updatedGrid[row] = [...updatedGrid[row]];
-                    updatedGrid[row][column] = part;
+        // we don't want to get a new array for worm location, we want to update the tiles affected... 
+        newWormLocation.forEach((segment: WormSegment) => {  
+            const { part, location } = segment;
+            const { row, column } = location;
 
-                    // reset old tail with sand skin to give sandworm the illusion of moving across sand.
-                    if(part === 'tail') {
+            updatedGrid[row] = [...updatedGrid[row]];
+            updatedGrid[row][column] = part;
+            
+            // reset old tail with sand skin to give sandworm the illusion of moving across sand.
+            if (part === 'tail') {
+                const tailDirection = getLastItem(wormPath);
+
+                switch (tailDirection) {
+                    case Direction.RIGHT:
                         updatedGrid[row][column - 1] = TileSkin.SAND;
-                    }
-                }); 
-            });
-
-            // Only update the grid if it has changed
-            if (JSON.stringify(updatedGrid) !== JSON.stringify(grid)) {
-                setGrid(updatedGrid);
+                        break;
+                    case Direction.LEFT:
+                        updatedGrid[row][column + 1] = TileSkin.SAND;
+                        break;
+                    case Direction.UP:
+                        updatedGrid[row + 1][column] = TileSkin.SAND;
+                        break;
+                    case Direction.DOWN:
+                        updatedGrid[row - 1][column] = TileSkin.SAND;
+                        break;
+                }
             }
-    }, [grid]);
+        }); 
 
-    const moveSandWorm = useCallback(() => {
-        // If going RIGHT, we STAY in same ROW and move to the RIGHT column
-        // If going LEFT, we STAY in same ROW and move to the LEFT column
-        // If going UP, we STAY in same COLUMN and move to the UP row
-        // If going DOWN, we STAY in same COLUMN and move to the DOWN row
+        // Only update the grid if it has changed
+        if (JSON.stringify(updatedGrid) !== JSON.stringify(grid)) {
+            setGrid(updatedGrid);
+        }
+    }, [grid, wormPath]);
 
-        if (!wormPosition) return null;
+    const getRandomizedDirectionOptions = (options: Direction[]) => {
+        const randomInt: number = Math.random();
+        const randomDirection = randomInt < 0.5 ? options[0] : options[1];
+        const remainingOption = options.filter((option) => option !== randomDirection)[0];
+        const randomizedOptions: Direction[] = [randomDirection, remainingOption];
 
-        let newWormPosition = { ...wormPosition };
+        return randomizedOptions;
+    };
 
-        Object.keys(newWormPosition).forEach((part) => {
-            newWormPosition[part as WormAnatomy] = newWormPosition[part as WormAnatomy].map((coordinate) => {
-                let newCoordinate = { ...coordinate };
+    const validateNextMove = useCallback((segment: WormSegment, direction: Direction) => {
+        const { row, column } = segment.location;
+        const maxRow: number = rows - 1;
+        const maxColumn: number = columns - 1;
 
-                switch (wormDirection) {
-                    case WormDirection.RIGHT:
-                    newCoordinate.column += 1;
-                    break;
-                    case WormDirection.LEFT:
-                    newCoordinate.column -= 1;
-                    break;
-                    case WormDirection.UP:
-                    newCoordinate.row -= 1;
-                    break;
-                    case WormDirection.DOWN:
-                    newCoordinate.row += 1;
-                    break;
+        switch (direction) {
+            case Direction.RIGHT:
+                if (column + 1 > maxColumn){
+                    return false;
+                }
+                break;
+            case Direction.LEFT:
+                if (column - 1 < 0){
+                    return false;
                 }
 
-                return newCoordinate;
-            });
+                break;
+            case Direction.UP:
+                if (row - 1 < 0){
+                    return false;
+                }
+
+                break;
+            case Direction.DOWN:
+                if (row + 1 > maxRow){
+                    return false;
+                }
+                break;
+        }
+
+        return true;
+
+    }, [columns, rows]);
+ 
+    const getRandomDirectionBasedOnMovement = useCallback((head: WormSegment) => {
+        // oh, we hit the maxCol boundary. let's change the sandworm direction UP or DOWN randomly for fun.
+        let safeOption: Direction | null = null;
+
+        // set directional options
+        const directionalOptions: Direction[] = wormDirection === Direction.RIGHT || wormDirection === Direction.LEFT
+            ? [Direction.UP, Direction.DOWN]
+            : [Direction.LEFT, Direction.RIGHT];
+
+        const randomizedOptions: Direction[] = getRandomizedDirectionOptions(directionalOptions);
+
+        randomizedOptions.forEach((option) => {   
+            const isValidMove: boolean = validateNextMove(head, option);         
+            
+            if(isValidMove) {
+                safeOption = option;
+            };
         });
 
-        setWormPosition((prevWormPosition) => {
-            const updatedWormPosition = { ...prevWormPosition, ...newWormPosition };
-            return updatedWormPosition;
-        });
+        if(!safeOption) {
+            throw new Error('No safe direction found.');
+        }
+        
+        return safeOption;
+    }, [validateNextMove, wormDirection]);
 
-        renderSandWormMovement(newWormPosition);
+    const getWormPathDirection = useCallback((path: Direction[], segment: WormSegment): Direction => {
+        if(!path || path.length === 0) throw new Error('Worm path is null or empty.');
 
-    }, [wormPosition, wormDirection, renderSandWormMovement]);
+        return path[segment.key];
+    }, []);
+
+    const moveSandWorm = useCallback(async () => {
+        /*
+            This function is for mutating the location data for each segmented part of the Sandworm.
+        */
+        if (!wormLocation) return null;
+
+        let newWormLocation = [ ...wormLocation ]; 
+
+        // Update the location of each segment based on the segment direction. 
+        newWormLocation = await Promise.all(newWormLocation.map(async (segment) => {
+
+            let updatedSegment = { ...segment };
+            let updatedPath = wormPath;
+            let segmentDirection: Direction = wormDirection;
+
+            /*
+                we need to check to see if the sandworm needs to change direction (hit the boundary)
+                before actually mutating the location coordinate data.
+            */
+
+            if (segment.part === WormAnatomy.HEAD) {
+
+                // Validate the next move in default direction to detect boundary collision
+                const safeMove: boolean = validateNextMove(updatedSegment, wormDirection);
+
+                if (!safeMove) {     
+                    // Move is not safe as it collides with boundary, move sandworm to available direction (random)
+                    segmentDirection = getRandomDirectionBasedOnMovement(updatedSegment);
+                }
+
+                /*  
+                    Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
+                    and the values are the direction in which that segment must move. 
+
+                    Example Worm Path: [UP, RIGHT, RIGHT, DOWN]
+
+                    The Worm path is updated with new HEAD direction inserted at beginning of array,
+                    and last item in array is removed to record the sandworm path and move in a worm-like fashion.
+                */
+                
+                updatedPath.unshift(segmentDirection);
+                updatedPath.pop();
+
+                 // set direction in state for when no input is detected
+                setWormDirection(segmentDirection);
+
+            } else {
+                // check the worm path for this segment's direction to modify it's location coordinates below.
+                segmentDirection = getWormPathDirection(wormPath, segment);
+            }
+
+            setWormPath(updatedPath);
+
+            switch (segmentDirection) {
+                case Direction.RIGHT:
+                    updatedSegment.location.column += 1;
+
+                break;
+                case Direction.LEFT:
+                    updatedSegment.location.column -= 1;
+
+                break;
+                case Direction.UP:
+                    updatedSegment.location.row -= 1;
+
+                break;
+                case Direction.DOWN:
+                    updatedSegment.location.row += 1;
+                
+                break;
+            }
+
+            return updatedSegment;
+        }));
+
+        setWormLocation(newWormLocation);
+
+        renderSandWormMovement(newWormLocation);
+
+    }, [wormLocation, renderSandWormMovement, getRandomDirectionBasedOnMovement, wormPath, validateNextMove, getWormPathDirection, wormDirection]);
 
     const generateTileSkinGrid = useCallback(async(rows: number, columns: number) => {
         const gridArrayOfTileSkinString = Array.from({ length: rows }, () =>
@@ -142,23 +297,22 @@ function GameBoard({windowSize}: GameBoardProps) {
 
             return row.map((column, columnIndex) => {
 
-                if (!wormPosition) return TileSkin.SAND;
+                if (!wormLocation) return TileSkin.SAND;
 
                 // Check if the current tile is part of the worm
-                const wormPart = Object.keys(wormPosition).find((key): key is WormAnatomy => {
-                    const positions = wormPosition[key as WormAnatomy];
-                    return positions.some((coordinate) => {
-                        return coordinate.row === rowIndex && coordinate.column === columnIndex;
-                    });
+                const wormPart = wormLocation.find((segment): segment is WormSegment => {
+                    const { location } = segment;
+
+                    return location.row === rowIndex && location.column === columnIndex;
                 });
 
                 if (wormPart) {
                     // Return the corresponding worm part (head, body, or tail)
-                    return wormPart;
+                    return wormPart.part;
                 }
 
                 //TODO: These should be randomly placed on the grid (not hardcoded)
-                const foodPositions = [
+                const foodLocations = [
                     { row: 3, col: 3 },
                     { row: 5, col: 7 },
                     { row: 8, col: 1 },
@@ -166,11 +320,11 @@ function GameBoard({windowSize}: GameBoardProps) {
                 ];
 
                 // Check if the current tile is a food position
-                const foodPositionDetected = foodPositions.find((position) => {
-                    return position.row === rowIndex && position.col === columnIndex;
+                const foodLocationDetected = foodLocations.find((location) => {
+                    return location.row === rowIndex && location.col === columnIndex;
                 });
 
-                if (foodPositionDetected) {
+                if (foodLocationDetected) {
                     return TileSkin.FOOD;
                 }
 
@@ -179,7 +333,7 @@ function GameBoard({windowSize}: GameBoardProps) {
         });
         
         return gridSkinsArray;
-     }, [wormPosition]);
+     }, [wormLocation]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         setDeviceType(deviceType);
@@ -188,8 +342,6 @@ function GameBoard({windowSize}: GameBoardProps) {
         const tileSize: number = updateTileSize(deviceType);
         setTileSize(tileSize);
         setTotalTiles(getTotalTiles(deviceType)); 
-
-        setWormDirection(WormDirection.RIGHT); //TODO: this should appear random but based on the wormStartPosition
 
         const rows = GameDimensions[deviceType].rows;
         const columns = GameDimensions[deviceType].columns;
@@ -201,7 +353,15 @@ function GameBoard({windowSize}: GameBoardProps) {
 
         setGrid(gridSkinsArray);
 
-    }, [generateTileSkinGrid]);
+        let initialWormPath: Direction[] = [];
+
+        for(let i = 0; i <= wormLength - 1; i++) {
+            initialWormPath.push(Direction.RIGHT);
+        }
+
+        setWormPath(initialWormPath)
+
+    }, [generateTileSkinGrid, wormLength]);
 
     const updateTileSize = (deviceType: Device): number => {
         const containerWidth = window.innerWidth * 0.9;
@@ -243,6 +403,8 @@ function GameBoard({windowSize}: GameBoardProps) {
     }, [isMobile, isTablet, initGameBoardGrid]);
 
     useEffect(() => {
+        if(tempGameOver) return; 
+
         const interval = setInterval(() => {
             // TODO: Check for collisions with walls, food, or itself
 
@@ -251,10 +413,10 @@ function GameBoard({windowSize}: GameBoardProps) {
 
             // TODO: Update the game state (score, worm length, food eaten, etc.)
 
-        }, 1000);
+        }, 500);
     
         return () => clearInterval(interval);
-    }, [moveSandWorm]);
+    }, [moveSandWorm, tempGameOver]);
     
     return (
         <>

@@ -25,3 +25,10 @@ export const GameDimensions: Record<Device, Dimension> = {
         rows: 15
     }
 }
+
+export enum Direction {
+    UP = "UP",
+    DOWN = "DOWN", 
+    LEFT = "LEFT",
+    RIGHT = "RIGHT"
+}
