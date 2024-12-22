@@ -14,11 +14,12 @@ const GameTile = ({texture, size, coordinate, children, onCollision}: GameTilePr
 
     return (
         <Grid 
+            title="grid-tile"
             data-testid={`tile-${row}-${column}`}
-            className={`grid-item border-orange-200 border-2 tile-texture--${texture}`}
+            className={`grid-tile border-orange-200 border-2 tile-texture--${texture}`}
             style={{width: size, height: size}}
         >
-                <div className="grid-item-content">
+                <div className="grid-tile--content">
                     <h3>{children}</h3>
                 </div>
         </Grid>
