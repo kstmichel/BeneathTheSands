@@ -2,13 +2,14 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 interface GameContextProps {
   wormLength: number;
-//   duration: number;
+  speed: number;
   foodEaten: number;
   score: number;
   level: number;
   gameOver: boolean;
   gameWon: boolean;
   increaseScore: () => void;
+  increaseSpeed: () => void;
   nextLevel: () => void;
   increaseWormLength: () => void;
   increaseFoodEaten: () => void;
@@ -22,7 +23,7 @@ const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => { 
   const [wormLength, setWormLength] = useState(initialWormLength);
-//   const [duration, setDuration] = useState(0);
+  const [speed, setSpeed] = useState(1000);
   const [foodEaten, setFoodEaten] = useState(0);
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
@@ -30,6 +31,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [gameWon, setGameWon] = useState(false);
 
   const increaseScore = () => setScore(prevScore => prevScore + 1);
+  const increaseSpeed = () => setSpeed(prevSpeed => prevSpeed - 200);
   const nextLevel = () => setLevel(prevLevel => prevLevel + 1);
   const increaseWormLength = () => setWormLength(prevLength => prevLength + 1);
   const increaseFoodEaten = () => setFoodEaten(prevEaten => prevEaten + 1);
@@ -41,16 +43,26 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         score, 
         level, 
         wormLength, 
+        speed,
         foodEaten, 
         gameOver, 
         gameWon, 
         increaseScore, 
+        increaseSpeed,
         nextLevel, 
         increaseWormLength, 
         increaseFoodEaten ,
         victoryDance,
         oopsYouLost
     }}>
+      {children}
+    </GameContext.Provider>
+  );
+};
+
+export const MockGameProvider: React.FC<{ children: ReactNode, value: GameContextProps }> = ({ children, value }) => {
+  return (
+    <GameContext.Provider value={value}>
       {children}
     </GameContext.Provider>
   );

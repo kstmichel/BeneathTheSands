@@ -2,10 +2,9 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameDimensions, Device, Direction, GridCoordinates, WormAnatomy, WormSegment, TileTexture} from '../../library/definitions';
-import { getTotalTiles, getLastItem } from '../../library/utils';
+import { GameDimensions, Device, Direction, WormAnatomy, WormSegment, TileTexture} from '../../library/definitions';
+import { getTotalTiles, getLastItem, getRandomizedDirectionOptions, isOppositeDirection } from '../../library/utils';
 import { useGameContext } from '../../GameContext';
-import locationData from '../../library/data.json';
 
 const initialWormDirection = Direction.RIGHT;
 
@@ -13,24 +12,14 @@ interface GameBoardProps {
     windowSize: {
         width: number;
         height: number;
-    }
+    },
+    gameData: WormSegment[]
 }
 
-function GameBoard({windowSize}: GameBoardProps) {
+function GameBoard({windowSize, gameData}: GameBoardProps) {
     const initialRef = useRef(true);
 
-    const wormLocationBySegment: WormSegment[] = locationData.map((segment) => {
-        const part = Object.values(WormAnatomy).find((value) => value === segment.part);
-        if (!part) {
-            throw new Error(`Invalid worm part: ${segment.part}`);
-        }
-        return {
-            ...segment,
-            part
-        };
-    });
-
-    const { level, wormLength, score, foodEaten, gameOver, gameWon } = useGameContext();
+    const { level, speed, wormLength, score, foodEaten, gameOver, gameWon, increaseSpeed } = useGameContext();
 
     const isMobile = windowSize.width <= 768;
     const isTablet = windowSize.width <= 1024;
@@ -43,11 +32,11 @@ function GameBoard({windowSize}: GameBoardProps) {
     const [columns, setColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
     const [wormDirection, setWormDirection] = useState<Direction>(initialWormDirection);
-    const [wormLocation, setWormLocation] = useState<WormSegment[]>(wormLocationBySegment);
+    const [wormLocation, setWormLocation] = useState<WormSegment[]>(gameData);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
 
-    // const [inputDirection, setInputDirection] = useState<Direction | null>(null);
+    const [inputDirection, setInputDirection] = useState<Direction | null>(null);
 
     const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
@@ -94,15 +83,6 @@ function GameBoard({windowSize}: GameBoardProps) {
             setGrid(updatedGrid);
         }
     }, [grid, wormPath]);
-
-    const getRandomizedDirectionOptions = (options: Direction[]) => {
-        const randomInt: number = Math.random();
-        const randomDirection = randomInt < 0.5 ? options[0] : options[1];
-        const remainingOption = options.filter((option) => option !== randomDirection)[0];
-        const randomizedOptions: Direction[] = [randomDirection, remainingOption];
-
-        return randomizedOptions;
-    };
 
     const validateNextMove = useCallback((segment: WormSegment, direction: Direction) => {
         const { row, column } = segment.location;
@@ -164,7 +144,7 @@ function GameBoard({windowSize}: GameBoardProps) {
         return safeOption;
     }, [validateNextMove, wormDirection]);
 
-    const getWormPathDirection = useCallback((path: Direction[], segment: WormSegment): Direction => {
+    const getDirectionByWormPath = useCallback((path: Direction[], segment: WormSegment): Direction => {
         if(!path || path.length === 0) throw new Error('Worm path is null or empty.');
 
         return path[segment.key];
@@ -183,7 +163,9 @@ function GameBoard({windowSize}: GameBoardProps) {
 
             let updatedSegment: WormSegment = { ...segment };
             let updatedPath = wormPath;
-            let segmentDirection: Direction = wormDirection;
+            let isInputOppositeDirection: boolean = inputDirection ? await isOppositeDirection(inputDirection, wormDirection) : false;
+            let isInvalidInputDirection: boolean = !inputDirection || isInputOppositeDirection;
+            let segmentDirection: Direction = isInvalidInputDirection ? wormDirection : inputDirection || wormDirection;
 
             /*
                 we need to check to see if the sandworm needs to change direction (hit the boundary)
@@ -191,6 +173,7 @@ function GameBoard({windowSize}: GameBoardProps) {
             */
 
             if (segment.part === WormAnatomy.HEAD) {
+                console.log('head coordinate', segment.location);
 
                 // Validate the next move in default direction to detect boundary collision
                 const safeMove: boolean = validateNextMove(updatedSegment, wormDirection);
@@ -218,7 +201,7 @@ function GameBoard({windowSize}: GameBoardProps) {
 
             } else {
                 // check the worm path for this segment's direction to modify it's location coordinates below.
-                segmentDirection = getWormPathDirection(wormPath, segment);
+                segmentDirection = getDirectionByWormPath(wormPath, segment);
             }
 
             setWormPath(updatedPath);
@@ -246,12 +229,13 @@ function GameBoard({windowSize}: GameBoardProps) {
         }));
 
         setWormLocation(newWormLocation);
+        setInputDirection(null); //reset input direction
 
         renderSandWormMovement(newWormLocation);
 
-    }, [wormLocation, renderSandWormMovement, getRandomDirectionBasedOnMovement, wormPath, validateNextMove, getWormPathDirection, wormDirection]);
+    }, [wormLocation, renderSandWormMovement, getRandomDirectionBasedOnMovement, wormPath, validateNextMove, getDirectionByWormPath, inputDirection, wormDirection]);
 
-    const generateTileSkinGrid = useCallback(async(rows: number, columns: number) => {
+    const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
         let desertTextureGrid = Array.from({ length: rows }, () =>
             Array.from({ length: columns }, () => TileTexture.SAND));
     
@@ -311,7 +295,7 @@ function GameBoard({windowSize}: GameBoardProps) {
         setRows(rows);
         setColumns(columns);
 
-        const gridTexture = await generateTileSkinGrid(rows, columns);
+        const gridTexture = await generateTileTextureGrid(rows, columns);
 
         setGrid(gridTexture);
 
@@ -323,7 +307,7 @@ function GameBoard({windowSize}: GameBoardProps) {
 
         setWormPath(initialWormPath)
 
-    }, [generateTileSkinGrid, wormLength]);
+    }, [generateTileTextureGrid, wormLength]);
 
     const updateTileSize = (deviceType: Device): number => {
         const containerWidth = window.innerWidth * 0.9;
@@ -336,6 +320,24 @@ function GameBoard({windowSize}: GameBoardProps) {
         );
 
         return size;
+    };
+
+       // Add listener for Arrow keys input
+       const handleKeyDown = (event: KeyboardEvent) => {
+        switch (event.key) {
+            case 'ArrowUp':
+                setInputDirection(Direction.UP);
+                break;
+            case 'ArrowDown':
+                setInputDirection(Direction.DOWN);
+                break;
+            case 'ArrowLeft':
+                setInputDirection(Direction.LEFT);
+                break;
+            case 'ArrowRight':
+                setInputDirection(Direction.RIGHT);
+                break;
+        }
     };
         
     useEffect(() => {
@@ -354,10 +356,16 @@ function GameBoard({windowSize}: GameBoardProps) {
                 await initGameBoardGrid(deviceType);
             }
 
+            window.addEventListener('keydown', handleKeyDown);
+            
             // Update size on window resize
             const handleResize = () => updateTileSize(deviceType);
             window.addEventListener("resize", handleResize);
-            return () => window.removeEventListener("resize", handleResize);
+
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener("resize", handleResize);
+            };
         }
 
         initializeGame();
@@ -375,11 +383,11 @@ function GameBoard({windowSize}: GameBoardProps) {
 
             // TODO: Update the game state (score, worm length, food eaten, etc.)
 
-        }, 500);
+        }, speed);
     
         return () => clearInterval(interval);
-    }, [moveSandWorm, tempGameOver]);
-    
+    }, [moveSandWorm, tempGameOver, speed]);
+
     return (
         <>
          <Box data-testid="game-board" >

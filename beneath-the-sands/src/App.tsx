@@ -2,8 +2,13 @@ import React, {useState, useEffect} from 'react';
 import { GameProvider } from './GameContext'
 import './App.css';
 import { GameBoard } from './components';
+import { WormSegment } from './library/definitions';
 
-function App() {
+interface AppProps {
+  data: WormSegment[]
+}
+
+function App({data}: AppProps) {
   // This is the main component that will render the game board and all other components
   // State should be managed here and passed down to children components
 
@@ -34,7 +39,7 @@ function App() {
         <h1 className="text-3xl font-bold underline">Beneath the Sands Introduction</h1>
         <h2 className="text-2xl">Level Cutscene (loading screen)</h2>
 
-        <GameBoard windowSize={windowSize} />
+        <GameBoard windowSize={windowSize} gameData={data} />
       </GameProvider>
     </div>
   );
