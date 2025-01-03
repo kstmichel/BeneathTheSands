@@ -225,6 +225,25 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         }
     }, [getValidRandomDirection, inputDirection, isBoundaryCollisionDetected, nextMoveCoordinates, validateInputDirection, wormDirection]);
 
+    const applyWormPathChange = (direction: Direction) => {
+        /*  
+            Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
+            and the values are the direction in which that segment must move. 
+
+            Example Worm Path: [UP, RIGHT, RIGHT, DOWN]
+
+            The Worm path is updated with new HEAD direction inserted at beginning of array,
+            and last item in array is removed to record the sandworm path and move in a worm-like fashion.
+        */
+
+        let updatedWormPath = wormPath;
+
+        updatedWormPath.unshift(direction);
+        updatedWormPath.pop();
+
+        return updatedWormPath;
+    };
+
     const moveSandWorm = useCallback(async () => {
         if (!sandWorm) {
             throw new Error('Worm location was not found');
@@ -236,33 +255,19 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         newSandwormLocation = await Promise.all(newSandwormLocation.map(async (segment) => {
 
             let updatedSegment: WormSegment = { ...segment };
-            let updatedWormPath = wormPath;
             let segmentDirection: Direction;
 
             if (segment.part === WormAnatomy.HEAD) {
                 segmentDirection = determineSandwormDirection();
-              
-                 /*  
-                    Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
-                    and the values are the direction in which that segment must move. 
-
-                    Example Worm Path: [UP, RIGHT, RIGHT, DOWN]
-
-                    The Worm path is updated with new HEAD direction inserted at beginning of array,
-                    and last item in array is removed to record the sandworm path and move in a worm-like fashion.
-                */
-
-                updatedWormPath.unshift(segmentDirection);
-                updatedWormPath.pop();
-
                 setWormDirection(segmentDirection);
+
+                const updatedWormPath = applyWormPathChange(segmentDirection);
+                setWormPath(updatedWormPath);
 
             } else {
                 // check the worm path for this segment's direction to modify it's location coordinates below.
                 segmentDirection = getDirectionByWormPath(wormPath, segment);
             }
-
-            setWormPath(updatedWormPath);
 
             // update segment location
             switch (segmentDirection) {
