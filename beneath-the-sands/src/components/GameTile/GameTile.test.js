@@ -1,7 +1,7 @@
-import React, { cache } from 'react';
-import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, act, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom'; // Ensure this import is present
 import GameTile from './';
-import App from '../../App';
 import { TileTexture } from '../../library/definitions';
 
 const GameTilePropTestValues = {
@@ -15,11 +15,13 @@ const GameTilePropTestValues = {
     onCollision: () => {console.log('test')}
 }
 
+
 describe('GameTile component renders correctly', () => {
     afterEach(cleanup);
 
     test('GameTile renders', () => {
         render(<GameTile {...GameTilePropTestValues} />);
+
         const gameTile = screen.getByTestId('tile-1-1');
         expect(gameTile).toBeInTheDocument();
     });
@@ -29,14 +31,14 @@ describe('GameTile component renders correctly', () => {
         
         const gameTile = screen.getByTestId('tile-1-1');
         expect(gameTile).toHaveClass('tile-texture--sand');
-    })  
+    });
 
     test('GameTile renders with food texture', () => {
         render(<GameTile {...GameTilePropTestValues} texture={TileTexture.FOOD} />);
         
         const gameTile = screen.getByTestId('tile-1-1');
         expect(gameTile).toHaveClass('tile-texture--food');
-    })  
+    });
 
     test('GameTile renders with head of sandworm texture', () => {
         render(<GameTile {...GameTilePropTestValues} texture={TileTexture.HEAD} />);

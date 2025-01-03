@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import sandWormData from './library/data.json';
+import gameData from './library/data.json';
 import { WormAnatomy, WormSegment } from './library/definitions';
 
 const rootElement = document.getElementById('root');
@@ -11,7 +11,7 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
 
-  const processedSandWormData: WormSegment[] = sandWormData.map((segment) => {
+  const processedSandWormData: WormSegment[] = gameData.sandWorm.map((segment) => {
     const part = Object.values(WormAnatomy).find((value) => value === segment.part);
     if (!part) {
         throw new Error(`Invalid worm part: ${segment.part}`);
@@ -22,9 +22,14 @@ if (rootElement) {
     };
   });
 
+  const initialGameData = {
+    sandWorm: processedSandWormData,
+    food: gameData.food
+  }
+
   root.render(
     <React.StrictMode>
-      <App data={processedSandWormData} />
+      <App data={initialGameData} />
     </React.StrictMode>
   );
 }

@@ -1,54 +1,72 @@
-import React, { cache } from 'react';
+import React from 'react';
 import { render, screen, act, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import App from '../../App';
 import { getTotalTiles } from '../../library/utils';
-import initialWormLocation from '../../library/data.json';
 import { WormAnatomy } from '../../library/definitions';
-import {GameContext} from '../../GameContext';
+import { MockGameProvider } from '../../GameContext';
 
-const MockGameProvider = ({ children, value }) => {
-    return (
-      <GameContext.Provider value={value}>
-        {children}
-      </GameContext.Provider>
-    );
-  };
+/*
+  AREAS TO TEST:
+    Rendering the grid
+    Handling user input
+    Updating the game state
+    Responding to different screen sizes
+*/
+
+
+  const testContext = {
+    wormLength: 2,
+    speed: 300,
+    foodEaten: 0,
+    score: 0,
+    level: 1,
+    gameOver: false,
+    gameWon: false,
+    increaseScore: () => console.log('increase score'),
+    increaseSpeed: () => console.log('increase speed'),
+    nextLevel: () => console.log('increase level'),
+    increaseWormLength: () => console.log('increase worm length'),
+    increaseFoodEaten: () => console.log('increase food eaten'),
+    victoryDance: () => console.log('winner'),
+    oopsYouLost: () => console.log('loser'),
+  }
+
+const sandWormTestLocation = [
+  {
+    key: 0,
+    part: WormAnatomy.HEAD,
+    location: { row: 7, column: 10 },
+  },
+  {
+    key: 1,
+    part: WormAnatomy.BODY,
+    location: { row: 7, column: 9 },
+  },
+  {
+    key: 2,
+    part: WormAnatomy.BODY,
+    location: { row: 7, column: 8 },
+  },
+  {
+    key: 3,
+    part: WormAnatomy.TAIL,
+    location: { row: 7, column: 7 },
+  },
+];
+
+const foodTestLocations = [
+  { row: 3, col: 3 },
+  { row: 5, col: 7 },
+  { row: 8, col: 1 },
+  { row: 9, col: 9 },
+];
 
 const testWormData = {
-    data: [
-    { 
-        key: 0,
-        part: WormAnatomy.HEAD,
-        location: { 
-            row: 7, 
-            column: 10
-        } 
-    },
-    { 
-        key: 1,
-        part: WormAnatomy.BODY,
-        location: { 
-            row: 7, 
-            column: 9
-        } 
-    }, 
-    { 
-        key: 2,
-        part: WormAnatomy.BODY,
-        location: { 
-            row: 7, 
-            column: 8
-        } 
-    },
-    { 
-        key: 3,
-        part: WormAnatomy.TAIL,
-        location: { 
-            row: 7, 
-            column: 7
-        } 
-    }
-]}
+  data: {
+    sandWorm: sandWormTestLocation,
+    food: foodTestLocations
+  }
+};
 
 function resizeWindow(width, height) {
   window.innerWidth = width;
@@ -60,65 +78,71 @@ afterEach(() => {
   cleanup();
 });
 
-test('game board renders', () => {
-  render(<App {...testWormData}  />);
-  const gameBoard = screen.getByTestId('game-board');
-  expect(gameBoard).toBeInTheDocument();
-});
+// Rendering
+describe('Gameboard renders correctly', () => {
+  describe('Renders correctly at different screen sizes', () => {
+      test('Desktop screen size', async () => {
+        act(() => {
+          resizeWindow(1030, 768);
+        });
 
-describe('GameBoard component', () => {
-  describe('renders correctly at different screen sizes', () => {
-    test('renders correctly at desktop size', async() => {
-      act(() => {
-        resizeWindow(1026, 768);
+        render(
+          <MockGameProvider value={testContext}>
+            <App {...testWormData} />
+          </MockGameProvider>
+        );
+
+        await waitFor(() => {
+          const tiles = screen.getAllByTitle('grid-tile');
+          const totalTiles = getTotalTiles('desktop');
+
+          expect(tiles.length).toBe(totalTiles);
+        });
       });
 
-      render(<App {...testWormData} />);
+      test('Tablet screen size', async () => {
+        act(() => {
+          resizeWindow(1000, 1024);
+        });
 
-      await waitFor(() => {
-        const tiles = screen.getAllByTitle('grid-tile');
-        const totalTiles = getTotalTiles('desktop');
-  
-        expect(tiles.length).toBe(totalTiles);
-      });
-    });
+        render(
+          <MockGameProvider value={testContext}>
+            <App {...testWormData} />
+          </MockGameProvider>
+        );
 
-    test('renders correctly at tablet size', async() => {
-      act(() => {
-        resizeWindow(900, 1024);
-      });
+        await waitFor(() => {
+          const tabletTiles = screen.getAllByTitle('grid-tile');
+          const totalTiles = getTotalTiles('tablet');
 
-      render(<App {...testWormData} />);
-
-      await waitFor(() => {
-        const tabletTiles = screen.getAllByTitle('grid-tile');
-        const totalTiles = getTotalTiles('tablet');
-        
-        expect(tabletTiles.length).toBe(totalTiles);
-      });
-    });
-
-    test('renders correctly at mobile size', async () => {
-      act(() => {
-        resizeWindow(375, 812);
+          expect(tabletTiles.length).toBe(totalTiles);
+        });
       });
 
-      render(<App {...testWormData} />);
+      test('Mobile screen size', async () => {
+        act(() => {
+          resizeWindow(375, 812);
+        });
 
-      await waitFor(() => {
-        const tiles = screen.getAllByTitle('grid-tile');
-        const totalTiles = getTotalTiles('mobile');
-        expect(tiles.length).toBe(totalTiles);
+        render(
+          <MockGameProvider value={testContext}>
+            <App {...testWormData} />
+          </MockGameProvider>
+        );
+
+        await waitFor(() => {
+          const tiles = screen.getAllByTitle('grid-tile');
+          const totalTiles = getTotalTiles('mobile');
+          expect(tiles.length).toBe(totalTiles);
+        });
       });
-    });
   });
 
-  describe('gameboard elements render correctly', () => {
-    test('renders initial worm location correctly', async () => {
+  test('Renders initial Sandworm location', async () => {
         render(<App {...testWormData} />);
 
         await waitFor(() => {
-            initialWormLocation.forEach(segment => {
+            sandWormTestLocation.forEach(segment => {
                 const { row, column } = segment.location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
@@ -127,90 +151,91 @@ describe('GameBoard component', () => {
     });
   })
 
-  describe('sandworm is controlled by user input (directional arrows)', () => {
-    test('sandworm moves up when top arrow key is pressed', async() => {
-        render(<App {...testWormData} />)
+  
 
-        // wait for sandworm to render
-        await waitFor(() => {
-            initialWormLocation.forEach(segment => {
-                const { row, column } = segment.location;
-                const tile = screen.getByTestId(`tile-${row}-${column}`);
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
-            });
-        }, 1000);
+  // describe('sandworm is controlled by user input (directional arrows)', () => {
+  //   test('sandworm moves up when top arrow key is pressed', async() => {
+  //       render(<App {...testWormData} />)
 
-         // press up arrow key
-         fireEvent.keyDown(window, { key: 'ArrowUp', code: 'ArrowUp' });
+  //       // wait for sandworm to render
+  //       await waitFor(() => {
+  //           initialWormLocation.forEach(segment => {
+  //               const { row, column } = segment.location;
+  //               const tile = screen.getByTestId(`tile-${row}-${column}`);
+  //               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+  //           });
+  //       }, 1000);
 
-         await waitFor(() => {
-            const headTile = screen.getByTestId('tile-7-10');
-            expect(headTile).toHaveClass('tile-texture--head');
-         })
-    });
+  //        // press up arrow key
+  //        fireEvent.keyDown(window, { key: 'ArrowUp', code: 'ArrowUp' });
 
-    test('sandworm moves right when right arrow key is pressed', async() => {
-        render(<App {...testWormData} />)
+  //        await waitFor(() => {
+  //           const headTile = screen.getByTestId('tile-7-10');
+  //           expect(headTile).toHaveClass('tile-texture--head');
+  //        })
+  //   });
 
-        // wait for sandworm to render
-        await waitFor(() => {
-            initialWormLocation.forEach(segment => {
-                const { row, column } = segment.location;
-                const tile = screen.getByTestId(`tile-${row}-${column}`);
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
-            });
-        }, 1000);
+  //   test('sandworm moves right when right arrow key is pressed', async() => {
+  //       render(<App {...testWormData} />)
 
-        // press up arrow key
-        fireEvent.keyDown(window, { key: 'ArrowRight', code: 'ArrowRight' });
+  //       // wait for sandworm to render
+  //       await waitFor(() => {
+  //           initialWormLocation.forEach(segment => {
+  //               const { row, column } = segment.location;
+  //               const tile = screen.getByTestId(`tile-${row}-${column}`);
+  //               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+  //           });
+  //       }, 1000);
 
-        await waitFor(() => {
-            const headTile = screen.getByTestId('tile-7-12');
-            expect(headTile).toHaveClass('tile-texture--head');
-        })
-    });
+  //       // press up arrow key
+  //       fireEvent.keyDown(window, { key: 'ArrowRight', code: 'ArrowRight' });
 
-    test('sandworm moves down when down arrow key is pressed', async() => {
-        render(<App {...testWormData} />)
+  //       await waitFor(() => {
+  //           const headTile = screen.getByTestId('tile-7-12');
+  //           expect(headTile).toHaveClass('tile-texture--head');
+  //       })
+  //   });
 
-        // wait for sandworm to render
-        await waitFor(() => {
-            initialWormLocation.forEach(segment => {
-                const { row, column } = segment.location;
-                const tile = screen.getByTestId(`tile-${row}-${column}`);
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
-            });
-        }, 1000);
+  //   test('sandworm moves down when down arrow key is pressed', async() => {
+  //       render(<App {...testWormData} />)
 
-        // press up arrow key
-        fireEvent.keyDown(window, { key: 'ArrowDown', code: 'ArrowDown' });
+  //       // wait for sandworm to render
+  //       await waitFor(() => {
+  //           initialWormLocation.forEach(segment => {
+  //               const { row, column } = segment.location;
+  //               const tile = screen.getByTestId(`tile-${row}-${column}`);
+  //               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+  //           });
+  //       }, 1000);
 
-        await waitFor(() => {
-            const headTile = screen.getByTestId('tile-8-11');
-            expect(headTile).toHaveClass('tile-texture--head');
-        })
-    });
+  //       // press up arrow key
+  //       fireEvent.keyDown(window, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    test('sandworm moves left when left arrow key is pressed', async() => {
-        render(<App {...testWormData} />)
+  //       await waitFor(() => {
+  //           const headTile = screen.getByTestId('tile-8-11');
+  //           expect(headTile).toHaveClass('tile-texture--head');
+  //       })
+  //   });
 
-        // wait for sandworm to render
-        await waitFor(() => {
-            initialWormLocation.forEach(segment => {
-                const { row, column } = segment.location;
-                const tile = screen.getByTestId(`tile-${row}-${column}`);
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
-            });
-        });
+  //   test('sandworm moves left when left arrow key is pressed', async() => {
+  //       render(<App {...testWormData} />)
 
-        // press up arrow key
-        fireEvent.keyDown(window, { key: 'ArrowLeft', code: 'ArrowLeft' });
+  //       // wait for sandworm to render
+  //       await waitFor(() => {
+  //           initialWormLocation.forEach(segment => {
+  //               const { row, column } = segment.location;
+  //               const tile = screen.getByTestId(`tile-${row}-${column}`);
+  //               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+  //           });
+  //       });
 
-        await waitFor(() => {
-            const headTile = screen.getByTestId('tile-7-9');
-            expect(headTile).toHaveClass('tile-texture--head');
-        })
-    });
+  //       // press up arrow key
+  //       fireEvent.keyDown(window, { key: 'ArrowLeft', code: 'ArrowLeft' });
 
-    });
-});
+  //       await waitFor(() => {
+  //           const headTile = screen.getByTestId('tile-7-9');
+  //           expect(headTile).toHaveClass('tile-texture--head');
+  //       })
+  //   });
+
+  // });

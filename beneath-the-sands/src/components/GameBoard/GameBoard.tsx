@@ -1,3 +1,4 @@
+import React from 'react';
 import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
@@ -13,7 +14,10 @@ interface GameBoardProps {
         width: number;
         height: number;
     },
-    gameData: WormSegment[]
+    gameData: {
+        sandWorm: WormSegment[],
+        food: GridCoordinates[]
+    }
 }
 
 function GameBoard({windowSize, gameData}: GameBoardProps) {
@@ -32,7 +36,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [totalColumns, setTotalColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
     const [wormDirection, setWormDirection] = useState<Direction>(initialWormDirection);
-    const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData);
+    const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm);
+    const [food, setFood] = useState<GridCoordinates[]>(gameData.food);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
@@ -321,16 +326,16 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 }
 
                 //TODO: These should be randomly placed on the grid (not hardcoded)
-                const foodLocations = [
-                    { row: 3, col: 3 },
-                    { row: 5, col: 7 },
-                    { row: 8, col: 1 },
-                    { row: 9, col: 9 },
-                ];
+                // const foodLocations = [
+                //     { row: 3, col: 3 },
+                //     { row: 5, col: 7 },
+                //     { row: 8, col: 1 },
+                //     { row: 9, col: 9 },
+                // ];
 
                 // Check if the current tile is a food position
-                const foodLocationDetected = foodLocations.find((location) => {
-                    return location.row === rowIndex && location.col === columnIndex;
+                const foodLocationDetected = food.find((location) => {
+                    return location.row === rowIndex && location.column === columnIndex;
                 });
 
                 if (foodLocationDetected) {
@@ -342,7 +347,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         });
         
         return desertWithGameAssets;
-     }, [sandWorm]);
+     }, [sandWorm, food]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         setDeviceType(deviceType);

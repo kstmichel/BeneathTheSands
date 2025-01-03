@@ -1,11 +1,14 @@
 import React, {useState, useEffect} from 'react';
-import { GameProvider } from './GameContext'
+import { GameProvider } from './GameContext';
 import './App.css';
 import { GameBoard } from './components';
-import { WormSegment } from './library/definitions';
+import { GridCoordinates, WormSegment } from './library/definitions';
 
 interface AppProps {
-  data: WormSegment[]
+  data: {
+    sandWorm: WormSegment[],
+    food: GridCoordinates[]
+  } 
 }
 
 function App({data}: AppProps) {
