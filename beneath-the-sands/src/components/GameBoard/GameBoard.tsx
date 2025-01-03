@@ -225,7 +225,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         }
     }, [getValidRandomDirection, inputDirection, isBoundaryCollisionDetected, nextMoveCoordinates, validateInputDirection, wormDirection]);
 
-    const applyWormPathChange = (direction: Direction) => {
+    const applyWormPathChange = useCallback((direction: Direction) => {
         /*  
             Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
             and the values are the direction in which that segment must move. 
@@ -242,7 +242,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         updatedWormPath.pop();
 
         return updatedWormPath;
-    };
+    }, [wormPath]);
 
     const moveSandWorm = useCallback(async () => {
         if (!sandWorm) {
@@ -296,7 +296,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         setInputDirection(null); //reset input direction
         renderSandWormMovement(newSandwormLocation);
 
-    }, [sandWorm, renderSandWormMovement, wormPath, getDirectionByWormPath, determineSandwormDirection]);
+    }, [sandWorm, renderSandWormMovement, wormPath, getDirectionByWormPath, determineSandwormDirection, applyWormPathChange]);
 
     const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
         let desertTextureGrid = Array.from({ length: rows }, () =>
