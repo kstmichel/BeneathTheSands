@@ -12,7 +12,7 @@ export interface GameTileProps {
 
 const GameTile = ({texture, size, coordinate, children, onCollision}: GameTileProps) => {
     const {row, column} = coordinate;
-
+    
     return (
         <Grid 
             title="grid-tile"

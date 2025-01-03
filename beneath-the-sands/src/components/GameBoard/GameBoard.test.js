@@ -4,6 +4,7 @@ import App from '../../App';
 import { getTotalTiles } from '../../library/utils';
 import { WormAnatomy } from '../../library/definitions';
 import { MockGameProvider } from '../../GameContext';
+import '@testing-library/jest-dom'; // Ensure this import is present
 
 /*
   AREAS TO TEST:
@@ -55,10 +56,10 @@ const sandWormTestLocation = [
 ];
 
 const foodTestLocations = [
-  { row: 3, col: 3 },
-  { row: 5, col: 7 },
-  { row: 8, col: 1 },
-  { row: 9, col: 9 },
+  { row: 3, column: 3 },
+  { row: 5, column: 7 },
+  { row: 8, column: 1 },
+  { row: 9, column: 9 },
 ];
 
 const testWormData = {
@@ -150,6 +151,19 @@ describe('Gameboard renders correctly', () => {
         });
     });
   })
+
+  test('Renders initial food locations', async () => {
+    render(<App {...testWormData} />);
+
+    await waitFor(() => {
+      foodTestLocations.forEach(food => {
+          const { row, column } = food;
+
+          const tile = screen.getByTestId(`tile-${row}-${column}`);
+          expect(tile).toHaveClass(`tile-texture--food`);
+      });
+  });
+  });
 
   
 

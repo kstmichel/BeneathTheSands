@@ -42,7 +42,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [wormPath, setWormPath] = useState<Direction[]>([]);
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
 
-
     const isBoundaryCollisionDetected = useCallback((coordinates?: GridCoordinates): boolean => {
         const { row, column }: GridCoordinates = coordinates || sandWorm[0].location;
         const yBoundaryCollision: boolean = row < 0 || row > (totalRows - 1);

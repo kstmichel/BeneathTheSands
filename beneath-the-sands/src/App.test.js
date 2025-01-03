@@ -3,6 +3,7 @@ import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import App from './App';
 import { getTotalTiles } from '../src/library/utils';
 import { WormAnatomy } from './library/definitions';
+import '@testing-library/jest-dom'; // Ensure this import is present
 
 const sandWormTestLocation = [
   {
