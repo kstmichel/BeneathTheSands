@@ -16,7 +16,7 @@ export function getRandomizedDirectionOptions(options: Direction[]) {
 };
 
 
-export const isOppositeDirection = async(direction: Direction, compareDirection: Direction): Promise<boolean> => {
+export const isOppositeDirection = (direction: Direction, compareDirection: Direction): boolean => {
     if(!direction || !compareDirection) throw new Error('Cannot detect opposite direction used.');
 
     let isOppositeDirection: boolean = false;

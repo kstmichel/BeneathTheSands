@@ -2,7 +2,7 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameDimensions, Device, Direction, WormAnatomy, WormSegment, TileTexture} from '../../library/definitions';
+import { GameDimensions, Device, Direction, WormAnatomy, WormSegment, TileTexture, GridCoordinates} from '../../library/definitions';
 import { getTotalTiles, getLastItem, getRandomizedDirectionOptions, isOppositeDirection } from '../../library/utils';
 import { useGameContext } from '../../GameContext';
 
@@ -28,19 +28,28 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     const [totalTiles, setTotalTiles] = useState<number>(0);
     const [tileSize, setTileSize] = useState(20);
-    const [rows, setRows] = useState<number>(0);
-    const [columns, setColumns] = useState<number>(0);
+    const [totalRows, setTotalRows] = useState<number>(0);
+    const [totalColumns, setTotalColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
     const [wormDirection, setWormDirection] = useState<Direction>(initialWormDirection);
-    const [wormLocation, setWormLocation] = useState<WormSegment[]>(gameData);
+    const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
-
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
+
+
+    const isBoundaryCollisionDetected = useCallback((coordinates?: GridCoordinates): boolean => {
+        const { row, column }: GridCoordinates = coordinates || sandWorm[0].location;
+        const yBoundaryCollision: boolean = row < 0 || row > (totalRows - 1);
+        const xBoundaryCollision: boolean = column < 0 || column > (totalColumns - 1);
+
+        return yBoundaryCollision || xBoundaryCollision;
+
+    }, [totalRows, totalColumns, sandWorm]);
 
     const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
-            This function expects wormLocation to have updated segment locations 
+            This function expects sandWorm to have updated segment locations 
             for each part (head/body/tail) of the Sandworm. Now we are updating the game board
             tiles with the new location of the Sandworm.
         */
@@ -53,6 +62,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         newWormLocation.forEach((segment: WormSegment) => {  
             const { part, location } = segment;
             const { row, column } = location;
+
+            if(isBoundaryCollisionDetected()) {
+                throw new Error(`sandworm has broken out of the boundary: ${row} ${column} ${part}`);
+            }
 
             updatedGrid[row] = [...updatedGrid[row]];
             updatedGrid[row][column] = part;
@@ -82,46 +95,35 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         if (JSON.stringify(updatedGrid) !== JSON.stringify(grid)) {
             setGrid(updatedGrid);
         }
-    }, [grid, wormPath]);
+    }, [grid, wormPath, isBoundaryCollisionDetected]);
 
-    const validateNextMove = useCallback((segment: WormSegment, direction: Direction) => {
-        const { row, column } = segment.location;
-        const maxRow: number = rows - 1;
-        const maxColumn: number = columns - 1;
+    const nextMoveCoordinates = useCallback((direction: Direction) => {
+        const wormHead: WormSegment = sandWorm[0]; // next move coordinates will always be baased off the sandworm's head location
+        const { row, column } = wormHead.location;
+        let nextLocation: GridCoordinates = {row, column};
 
         switch (direction) {
             case Direction.RIGHT:
-                if (column + 1 > maxColumn){
-                    return false;
-                }
+                nextLocation.column += 1
                 break;
             case Direction.LEFT:
-                if (column - 1 < 0){
-                    return false;
-                }
-
+                nextLocation.column -= 1
                 break;
             case Direction.UP:
-                if (row - 1 < 0){
-                    return false;
-                }
+                nextLocation.row -= 1
 
                 break;
             case Direction.DOWN:
-                if (row + 1 > maxRow){
-                    return false;
-                }
+                nextLocation.row += 1
+
                 break;
         }
 
-        return true;
+        return nextLocation;
 
-    }, [columns, rows]);
+    }, [sandWorm]);
  
-    const getRandomDirectionBasedOnMovement = useCallback((head: WormSegment) => {
-        // oh, we hit the maxCol boundary. let's change the sandworm direction UP or DOWN randomly for fun.
-        let safeOption: Direction | null = null;
-
+    const getValidRandomDirection = useCallback((): Direction => {
         // set directional options
         const directionalOptions: Direction[] = wormDirection === Direction.RIGHT || wormDirection === Direction.LEFT
             ? [Direction.UP, Direction.DOWN]
@@ -129,20 +131,19 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
         const randomizedOptions: Direction[] = getRandomizedDirectionOptions(directionalOptions);
 
-        randomizedOptions.forEach((option) => {   
-            const isValidMove: boolean = validateNextMove(head, option);         
+        const validDirections = randomizedOptions.filter((randomDirection: Direction) => {
+            const nextMove: GridCoordinates = nextMoveCoordinates(randomDirection);
             
-            if(isValidMove) {
-                safeOption = option;
-            };
+            return !isBoundaryCollisionDetected(nextMove); 
         });
 
-        if(!safeOption) {
-            throw new Error('No safe direction found.');
+        if(validDirections.length === 0) {
+            throw new Error('No safe directions were found.');
         }
         
-        return safeOption;
-    }, [validateNextMove, wormDirection]);
+        return validDirections[0]; // return first valid direction
+
+    }, [wormDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
 
     const getDirectionByWormPath = useCallback((path: Direction[], segment: WormSegment): Direction => {
         if(!path || path.length === 0) throw new Error('Worm path is null or empty.');
@@ -150,40 +151,98 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         return path[segment.key];
     }, []);
 
-    const moveSandWorm = useCallback(async () => {
-        /*
-            This function is for mutating the location data for each segmented part of the Sandworm.
-        */
-        if (!wormLocation) return null;
+    const validateInputDirection = useCallback( (inputDirection: Direction | null) => {
+        if(!inputDirection) throw new Error('failed to validate input direction');
 
-        let newWormLocation = [ ...wormLocation ]; 
+        let isValid: boolean = true;
+
+        try {
+            // run validation functions
+            const runValidationChecks = async () => {
+                const moveInOppositeDirection: boolean = isOppositeDirection(inputDirection, wormDirection);
+
+                if (moveInOppositeDirection) {
+                    isValid = false;
+                    return; // no need to keep validating
+                }
+        
+                const nextMove: GridCoordinates = nextMoveCoordinates(inputDirection);
+                const moveCollidesWithBoundary: boolean = isBoundaryCollisionDetected(nextMove);
+             
+                if (moveCollidesWithBoundary){
+                    isValid = false;
+                }
+            }
+
+           runValidationChecks();
+
+        } catch {
+            throw new Error('input validation error occurred');
+        }
+
+        return isValid;
+
+    }, [wormDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
+
+    const determineSandwormDirection = useCallback(() => {
+        /*
+            HEAD DIRECTIVE: Check to see if any input was detected and if so validate the input.
+                Invalid input: Ignore move request and continue in the current direction.
+                    1) Move in the opposite direction  2) Move into the boundary wall
+                Valid input: Update the current direction to the input direction.
+        */
+        
+        try{
+            let headDirection = wormDirection; // default to worm's current direction
+            let nextMoveIsValidated: boolean = false;
+
+            // Check to see if any user input was detected with arrow keys.
+            if(inputDirection) {
+                 // Validate the input and set direction if valid, otherwise default to the current direction;
+                const isValidInputDirection: boolean = validateInputDirection(inputDirection);
+
+                if (isValidInputDirection){
+                    headDirection = inputDirection;
+                    nextMoveIsValidated = true;
+                }
+            }
+
+            // if next move hasn't been validated yet, check for a boundary collision
+            if (!nextMoveIsValidated) {  
+                const nextMove: GridCoordinates = nextMoveCoordinates(headDirection);
+
+                if (isBoundaryCollisionDetected(nextMove)) {
+                    // oops the sandworm hit the boundary, move it in a random direction to keep things spicy!
+                    headDirection = getValidRandomDirection(); 
+                }
+            }
+
+            return headDirection;
+
+
+        } catch (error) {
+            throw new Error('Error occurred setting sandworm direction')
+        }
+    }, [getValidRandomDirection, inputDirection, isBoundaryCollisionDetected, nextMoveCoordinates, validateInputDirection, wormDirection]);
+
+    const moveSandWorm = useCallback(async () => {
+        if (!sandWorm) {
+            throw new Error('Worm location was not found');
+        }
+
+        let newSandwormLocation = [ ...sandWorm ]; 
 
         // Update the location of each segment based on the segment direction. 
-        newWormLocation = await Promise.all(newWormLocation.map(async (segment) => {
+        newSandwormLocation = await Promise.all(newSandwormLocation.map(async (segment) => {
 
             let updatedSegment: WormSegment = { ...segment };
-            let updatedPath = wormPath;
-            let isInputOppositeDirection: boolean = inputDirection ? await isOppositeDirection(inputDirection, wormDirection) : false;
-            let isInvalidInputDirection: boolean = !inputDirection || isInputOppositeDirection;
-            let segmentDirection: Direction = isInvalidInputDirection ? wormDirection : inputDirection || wormDirection;
-
-            /*
-                we need to check to see if the sandworm needs to change direction (hit the boundary)
-                before actually mutating the location coordinate data.
-            */
+            let updatedWormPath = wormPath;
+            let segmentDirection: Direction;
 
             if (segment.part === WormAnatomy.HEAD) {
-                console.log('head coordinate', segment.location);
-
-                // Validate the next move in default direction to detect boundary collision
-                const safeMove: boolean = validateNextMove(updatedSegment, wormDirection);
-
-                if (!safeMove) {     
-                    // Move is not safe as it collides with boundary, move sandworm to available direction (random)
-                    segmentDirection = getRandomDirectionBasedOnMovement(updatedSegment);
-                }
-
-                /*  
+                segmentDirection = determineSandwormDirection();
+              
+                 /*  
                     Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
                     and the values are the direction in which that segment must move. 
 
@@ -192,11 +251,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                     The Worm path is updated with new HEAD direction inserted at beginning of array,
                     and last item in array is removed to record the sandworm path and move in a worm-like fashion.
                 */
-                
-                updatedPath.unshift(segmentDirection);
-                updatedPath.pop();
 
-                 // set direction in state for when no input is detected
+                updatedWormPath.unshift(segmentDirection);
+                updatedWormPath.pop();
+
                 setWormDirection(segmentDirection);
 
             } else {
@@ -204,36 +262,36 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 segmentDirection = getDirectionByWormPath(wormPath, segment);
             }
 
-            setWormPath(updatedPath);
+            setWormPath(updatedWormPath);
 
+            // update segment location
             switch (segmentDirection) {
                 case Direction.RIGHT:
                     updatedSegment.location.column += 1;
-
+    
                 break;
                 case Direction.LEFT:
                     updatedSegment.location.column -= 1;
-
+    
                 break;
                 case Direction.UP:
                     updatedSegment.location.row -= 1;
-
+    
                 break;
                 case Direction.DOWN:
                     updatedSegment.location.row += 1;
                 
                 break;
             }
-
+    
             return updatedSegment;
         }));
 
-        setWormLocation(newWormLocation);
+        setSandWorm(newSandwormLocation);
         setInputDirection(null); //reset input direction
+        renderSandWormMovement(newSandwormLocation);
 
-        renderSandWormMovement(newWormLocation);
-
-    }, [wormLocation, renderSandWormMovement, getRandomDirectionBasedOnMovement, wormPath, validateNextMove, getDirectionByWormPath, inputDirection, wormDirection]);
+    }, [sandWorm, renderSandWormMovement, wormPath, getDirectionByWormPath, determineSandwormDirection]);
 
     const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
         let desertTextureGrid = Array.from({ length: rows }, () =>
@@ -243,10 +301,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
             return row.map((column, columnIndex) => {
 
-                if (!wormLocation) return TileTexture.SAND;
+                if (!sandWorm) return TileTexture.SAND;
 
                 // Check if the current tile is part of the worm
-                const wormPart = wormLocation.find((segment): segment is WormSegment => {
+                const wormPart = sandWorm.find((segment): segment is WormSegment => {
                     const { location } = segment;
 
                     return location.row === rowIndex && location.column === columnIndex;
@@ -279,7 +337,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         });
         
         return desertWithGameAssets;
-     }, [wormLocation]);
+     }, [sandWorm]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         setDeviceType(deviceType);
@@ -292,8 +350,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         const rows = GameDimensions[deviceType].rows;
         const columns = GameDimensions[deviceType].columns;
 
-        setRows(rows);
-        setColumns(columns);
+        setTotalRows(rows);
+        setTotalColumns(columns);
 
         const gridTexture = await generateTileTextureGrid(rows, columns);
 
@@ -322,8 +380,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         return size;
     };
 
-       // Add listener for Arrow keys input
-       const handleKeyDown = (event: KeyboardEvent) => {
+    // Add listener for Arrow keys input
+    const handleKeyDown = (event: KeyboardEvent) => {
         switch (event.key) {
             case 'ArrowUp':
                 setInputDirection(Direction.UP);
@@ -401,6 +459,15 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                   30x15: Allows for more complex movement and strategies. 
             */}
             {deviceSize}: {totalTiles} tiles
+            <Typography variant="body1">
+                Total Rows: {totalRows} 
+            </Typography>
+            <Typography variant="body1">
+                Total Columns: {totalColumns}
+            </Typography>
+            <Typography variant="body1">
+                Head Coordinate: {sandWorm[0].location.row}, {sandWorm[0].location.column}
+            </Typography>
 
             <Box className="justify-start text-left absolute bottom-8 left-8 ">
                 <Typography variant="h6" style={{fontWeight: '600'}}>Beneath the Sands</Typography>
@@ -420,8 +487,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 wrap="wrap" 
                 className="grid-container"
                 style={{
-                    gridTemplateColumns: `repeat(${rows}, 1fr)`,
-                    gridTemplateRows: `repeat(${columns}, 1fr)`,
+                    gridTemplateColumns: `repeat(${totalRows}, 1fr)`,
+                    gridTemplateRows: `repeat(${totalColumns}, 1fr)`,
                   }}
             >
                 {
