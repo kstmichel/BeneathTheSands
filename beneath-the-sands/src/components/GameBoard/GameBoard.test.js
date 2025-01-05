@@ -136,7 +136,7 @@ afterEach(() => {
 });
 
 // Rendering
-describe("Gameboard renders correctly", () => {
+describe("Gameboard Rendering", () => {
   describe("Displays correct number of tiles", () => {
     test("Desktop screen size", async () => {
       act(() => {
@@ -223,6 +223,8 @@ describe("Gameboard renders correctly", () => {
         });
       });
     });
+  });
+
   });
 
   describe("Sandworm Behavior", () => {
@@ -854,12 +856,8 @@ describe("Gameboard renders correctly", () => {
                   });
 
           });
-
       });
-
-      
     });
-  });
 
   //describe('Context updates based on actions', () => {});
 
