@@ -1,3 +1,41 @@
+/**
+ * Test suite for the GameBoard component.
+ * 
+ * This suite includes tests for:
+ * - Rendering the grid
+ * - Handling user input
+ * - Updating the game state
+ * - Responding to different screen sizes
+ * 
+ * Device Screen Sizes:
+ * - Desktop: 1030x768
+ * - Tablet: 1000x1024
+ * - Mobile: 375x812
+ *
+ * Test Data:
+ * - Sandworm initial location
+ * - Food initial locations
+ * - Start direction
+ * 
+ * Utility Functions:
+ * - resizeWindow(width, height): Resizes the window to the specified width and height.
+ * 
+ * Jest Configuration:
+ * - jest.useFakeTimers(): Uses fake timers for Jest.
+ * - afterEach(cleanup): Cleans up after each test.
+ * 
+ * Test Cases:
+ * - Gameboard renders correctly
+ *   - Displays correct number of tiles for different screen sizes
+ *   - Renders board elements correctly
+ * - Sandworm Behavior
+ *   - Default Behavior (No Input)
+ *   - Input Behavior
+ * - Context updates based on actions
+ * - State updates based on actions
+ * - Game states (win/lose)
+ */
+
 import React from "react";
 import {
   render,
@@ -6,6 +44,7 @@ import {
   cleanup,
   waitFor,
   fireEvent,
+  throwError
 } from "@testing-library/react";
 import App from "../../App";
 import { getTotalTiles } from "../../library/utils";
@@ -98,7 +137,7 @@ afterEach(() => {
 
 // Rendering
 describe("Gameboard renders correctly", () => {
-  describe("Renders correctly at different screen sizes", () => {
+  describe("Displays correct number of tiles", () => {
     test("Desktop screen size", async () => {
       act(() => {
         resizeWindow(desktopWidth, desktopHeight);
@@ -157,7 +196,7 @@ describe("Gameboard renders correctly", () => {
   });
 
   describe("Renders board elements correctly", () => {
-    test("Renders initial Sandworm location", async () => {
+    it("renders initial Sandworm location", async () => {
       render(
         <MockGameProvider value={testContext}>
           <App {...testWormData} />
@@ -167,14 +206,12 @@ describe("Gameboard renders correctly", () => {
         sandWormTestLocation.forEach((segment) => {
           const { row, column } = segment.location;
           const tile = screen.getByTestId(`tile-${row}-${column}`);
-          expect(tile).toHaveClass(
-            `tile-texture--${segment.part.toLowerCase()}`
-          );
+          expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
         });
       });
     });
 
-    test("Renders initial food locations", async () => {
+    it("renders initial food locations", async () => {
       render(<App {...testWormData} />);
 
       await waitFor(() => {
@@ -189,11 +226,11 @@ describe("Gameboard renders correctly", () => {
   });
 
   describe("Sandworm Behavior", () => {
-    describe("Default (No Input)", () => {
+    describe("Default Behavior (No Input)", () => {
       // Default Behavior Tests
 
       // TODO: add initial worm direction to the game context and use in this test
-      test("Sandworm continues to move in current direction", async () => {
+      it("continues to move in current direction", async () => {
         /*  GIVEN the board renders, 
             WHEN no input is detected, 
             THEN the sandworm should continue to move in current direction 
@@ -251,7 +288,7 @@ describe("Gameboard renders correctly", () => {
         );
       });
 
-      test("Sandworm changes direction when it hits a boundary", async () => {
+      it("changes direction when it hits a boundary", async () => {
         /*  GIVEN the board renders,
             WHEN the sandworm hits wall 
             THEN direction options are validated
@@ -363,8 +400,8 @@ describe("Gameboard renders correctly", () => {
     });
 
     describe("Input Behavior", () => {
-      describe(`Apply user input when valid, changing the sandworm direction`, () => {
-        test("Sandworm moves up when UP arrow key is pressed", async () => {
+      describe(`Change direction when upon valid input`, () => {
+        it("moves up when UP arrow key is pressed", async () => {
           act(() => {
             resizeWindow(desktopWidth, desktopHeight);
           });
@@ -424,7 +461,7 @@ describe("Gameboard renders correctly", () => {
           });
         });
 
-        test("Sandworm moves right when RIGHT arrow key is pressed", async () => {
+        it("moves right when RIGHT arrow key is pressed", async () => {
           act(() => {
             resizeWindow(desktopWidth, desktopHeight);
           });
@@ -500,7 +537,7 @@ describe("Gameboard renders correctly", () => {
           });
         });
 
-        test("Sandworm moves down when DOWN arrow key is pressed", async () => {
+        it("moves down when DOWN arrow key is pressed", async () => {
           act(() => {
             resizeWindow(desktopWidth, desktopHeight);
           });
@@ -576,7 +613,7 @@ describe("Gameboard renders correctly", () => {
           });
         });
 
-        test("Sandworm moves left when LEFT arrow key is pressed", async () => {
+        it("moves left when LEFT arrow key is pressed", async () => {
           act(() => {
             resizeWindow(desktopWidth, desktopHeight);
           });
@@ -653,8 +690,8 @@ describe("Gameboard renders correctly", () => {
         });
       });
 
-      describe('Ignore user input when invalid, continue in current direction', () => {
-          test("Sandworm is directed to move in opposite direction (invalid move)", async () => {
+      describe('Continue in current direction upon invalid input', () => {
+          it("does not move in opposite direction", async () => {
 
               /* GIVEN the board renders,
                  WHEN user input is detected
@@ -739,7 +776,7 @@ describe("Gameboard renders correctly", () => {
             
           });
 
-          test('Sandworm is directed into a wall', async () => {
+          it('does not move into a wall', async () => {
               /*  GIVEN the board renders,
                   WHEN user input is detected
                   AND next move is invalid as it collides with boundary
@@ -778,7 +815,7 @@ describe("Gameboard renders correctly", () => {
                     },
                   };
 
-                  //ASSIGN
+                  //ARRANGE
                   render(
                     <MockGameProvider value={testContext}>
                       <App {...collideWithWallTest} />

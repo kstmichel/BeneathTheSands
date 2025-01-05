@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid2';
 import { TileTexture, GridCoordinates } from '../../library/definitions';
 
 export interface GameTileProps {
-    texture: TileTexture;
+    texture?: TileTexture;
     size: number;
     coordinate: GridCoordinates;
     children?: React.ReactNode;
@@ -12,13 +12,14 @@ export interface GameTileProps {
 
 const GameTile = ({texture, size, coordinate, children, onCollision}: GameTileProps) => {
     const {row, column} = coordinate;
+    const tileTexture = texture || TileTexture.SAND;
     
     return (
         <Grid 
             title="grid-tile"
             id={`tile-${row}-${column}`}
             data-testid={`tile-${row}-${column}`}
-            className={`grid-tile border-orange-200 border-2 tile-texture--${texture}`}
+            className={`grid-tile border-orange-200 border-2 tile-texture--${tileTexture}`}
             style={{width: size, height: size}}
         >
                 <div className="grid-tile--content">

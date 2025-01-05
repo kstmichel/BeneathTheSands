@@ -43,7 +43,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
 
     const isBoundaryCollisionDetected = useCallback((coordinates?: GridCoordinates): boolean => {
-        const { row, column }: GridCoordinates = coordinates || sandWorm[0].location;
+        const { row, column }: GridCoordinates = coordinates || sandWorm[0]?.location;
         const yBoundaryCollision: boolean = row < 0 || row > (totalRows - 1);
         const xBoundaryCollision: boolean = column < 0 || column > (totalColumns - 1);
 
@@ -268,7 +268,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     }, [wormPath]);
 
     const moveSandWorm = useCallback(async () => {
-        if (!sandWorm) {
+        if (!sandWorm || sandWorm.length === 0) {
             throw new Error('Worm location was not found');
         }
 
@@ -323,13 +323,11 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
         let desertTextureGrid = Array.from({ length: rows }, () =>
-            Array.from({ length: columns }, () => TileTexture.SAND));
+            Array.from({ length: columns }, () => ""));
     
         const desertWithGameAssets = desertTextureGrid.map((row, rowIndex) => {
 
             return row.map((column, columnIndex) => {
-
-                if (!sandWorm) return TileTexture.SAND;
 
                 // Check if the current tile is part of the worm
                 const wormPart = sandWorm.find((segment): segment is WormSegment => {
@@ -342,15 +340,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                     // Return the corresponding worm part (head, body, or tail)
                     return wormPart.part;
                 }
-
-                //TODO: These should be randomly placed on the grid (not hardcoded)
-                // const foodLocations = [
-                //     { row: 3, col: 3 },
-                //     { row: 5, col: 7 },
-                //     { row: 8, col: 1 },
-                //     { row: 9, col: 9 },
-                // ];
-
+            
                 // Check if the current tile is a food position
                 const foodLocationDetected = food.find((location) => {
                     return location.row === rowIndex && location.column === columnIndex;
@@ -360,7 +350,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                     return TileTexture.FOOD;
                 }
 
-                return column;
+                return column; // defaults to empty string for sand
             });
         });
         
@@ -497,7 +487,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 Total Columns: {totalColumns}
             </Typography>
             <Typography variant="body1">
-                Head Coordinate: {sandWorm[0].location.row}, {sandWorm[0].location.column}
+                Head Coordinate: {sandWorm[0]?.location.row}, {sandWorm[0]?.location.column}
             </Typography>
             <Typography variant="body1">
                 Timer: {timer}

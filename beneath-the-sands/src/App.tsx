@@ -18,6 +18,10 @@ function App({data}: AppProps) {
   // Use Context API to manage timers and other global state
   // Use Reducer to manage game state
 
+  if (!data || !data.sandWorm || data.sandWorm.length === 0 || !data.food || data.food.length === 0 || !data.startDirection) {
+    throw new Error('game element data not found during rendering');
+  }
+
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,

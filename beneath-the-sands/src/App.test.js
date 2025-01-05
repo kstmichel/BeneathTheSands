@@ -1,7 +1,6 @@
-import React, { cache } from 'react';
-import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import App from './App';
-import { getTotalTiles } from '../src/library/utils';
 import { WormAnatomy, Direction } from './library/definitions';
 import '@testing-library/jest-dom'; // Ensure this import is present
 
@@ -35,21 +34,89 @@ const foodTestLocations = [
   { row: 9, col: 9 },
 ];
 
-const testWormData = {
-  data: {
-    sandWorm: sandWormTestLocation,
-    food: foodTestLocations,
-    startDirection: Direction.RIGHT,
-  }
-};
-
 afterEach(() => {
   cleanup();
 });
 
-test('Game board renders', () => {
-  render(<App {...testWormData} />);
+describe('Game throws error when data is not provided', () => {
 
-  const gameBoard = screen.getByTestId('game-board');
-  expect(gameBoard).toBeInTheDocument();
-});
+    test('data is not found', async () => {
+      const testErrorThrownMissingDataNull = {
+        data: null,
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingDataNull} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    });
+    
+    test('sandworm data is not found', async () => {
+      const testErrorThrownMissingSandwormDataNull = {
+        data: {
+          sandWorm: null,
+          food: foodTestLocations,
+          startDirection: Direction.RIGHT,
+        },
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingSandwormDataNull} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    
+      const testErrorThrownMissingSandwormDataEmpty = {
+        data: {
+          sandWorm: [],
+          food: foodTestLocations,
+          startDirection: Direction.RIGHT,
+        },
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingSandwormDataEmpty} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    });
+    
+    test('food data is not found', async () => {
+      const testErrorThrownMissingFoodDataNull = {
+        data: {
+          sandWorm: sandWormTestLocation,
+          food: null,
+          startDirection: Direction.RIGHT,
+        },
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingFoodDataNull} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    
+      const testErrorThrownMissingFoodDataEmpty = {
+        data: {
+          sandWorm: sandWormTestLocation,
+          food: [],
+          startDirection: Direction.RIGHT,
+        },
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingFoodDataEmpty} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    });
+
+
+    test('start direction is not found', async () => {
+      const testErrorThrownMissingStartDirectionNull = {
+        data: {
+          sandWorm: sandWormTestLocation,
+          food: foodTestLocations,
+          startDirection: null,
+        },
+      };
+    
+      await waitFor(() => {
+        expect(() => render(<App {...testErrorThrownMissingStartDirectionNull} />)).toThrow('game element data not found during rendering');
+      }, { timeout: 1000 });
+    
+    });
+  
+
+})
