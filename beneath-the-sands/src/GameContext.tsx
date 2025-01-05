@@ -23,7 +23,7 @@ const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => { 
   const [wormLength, setWormLength] = useState(initialWormLength);
-  const [speed, setSpeed] = useState(200);
+  const [speed, setSpeed] = useState(300);
   const [foodEaten, setFoodEaten] = useState(0);
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);

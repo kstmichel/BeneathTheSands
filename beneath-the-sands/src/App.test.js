@@ -2,7 +2,7 @@ import React, { cache } from 'react';
 import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
 import App from './App';
 import { getTotalTiles } from '../src/library/utils';
-import { WormAnatomy } from './library/definitions';
+import { WormAnatomy, Direction } from './library/definitions';
 import '@testing-library/jest-dom'; // Ensure this import is present
 
 const sandWormTestLocation = [
@@ -38,10 +38,10 @@ const foodTestLocations = [
 const testWormData = {
   data: {
     sandWorm: sandWormTestLocation,
-    food: foodTestLocations
+    food: foodTestLocations,
+    startDirection: Direction.RIGHT,
   }
 };
-
 
 afterEach(() => {
   cleanup();

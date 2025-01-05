@@ -14,30 +14,3 @@ export function getRandomizedDirectionOptions(options: Direction[]) {
 
     return randomizedOptions;
 };
-
-
-export const isOppositeDirection = (direction: Direction, compareDirection: Direction): boolean => {
-    if(!direction || !compareDirection) throw new Error('Cannot detect opposite direction used.');
-
-    let isOppositeDirection: boolean = false;
-
-    switch(direction) {
-        case Direction.UP:
-            if (compareDirection === Direction.DOWN) { isOppositeDirection = true; }
-            break;
-
-        case Direction.DOWN:
-            if(compareDirection === Direction.UP) isOppositeDirection = true;
-            break;
-
-        case Direction.LEFT: 
-            if(compareDirection === Direction.RIGHT) isOppositeDirection = true;
-            break;
-
-        case Direction.RIGHT:
-            if(compareDirection === Direction.LEFT) isOppositeDirection = true;
-            break;
-    }
-    
-    return isOppositeDirection;
-};

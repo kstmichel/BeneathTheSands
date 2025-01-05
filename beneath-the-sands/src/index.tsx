@@ -5,7 +5,7 @@ import App from './App';
 import './App.css';
 import reportWebVitals from './reportWebVitals';
 import gameData from './library/data.json';
-import { WormAnatomy, WormSegment } from './library/definitions';
+import { WormAnatomy, WormSegment, Direction } from './library/definitions';
 
 const rootElement = document.getElementById('root');
 
@@ -25,7 +25,8 @@ if (rootElement) {
 
   const initialGameData = {
     sandWorm: processedSandWormData,
-    food: gameData.food
+    food: gameData.food,
+    startDirection: Direction.DOWN,
   }
 
   root.render(
