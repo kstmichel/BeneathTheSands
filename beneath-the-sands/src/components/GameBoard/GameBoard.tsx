@@ -183,8 +183,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         try {
             // run validation functions
             const runValidationChecks = async () => {
-                // TODO: Instead of having this isOppositeDirection check use the wormDirection to compare,
-                //       we should check to see if nextMove in this direction is a body tile 
                 const moveInOppositeDirection: boolean = isOppositeDirection(inputDirection);
 
                 if (moveInOppositeDirection) {
