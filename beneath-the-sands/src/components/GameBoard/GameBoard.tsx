@@ -123,7 +123,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [sandWorm]);
 
-    const getTileTypeByCoordinate = (coordinates: GridCoordinates): TileTexture => {
+    const getTileTextureByCoordinate = (coordinates: GridCoordinates): TileTexture => {
         const {row, column} = coordinates;
         const tileByCoordinates = document.getElementById(`tile-${row}-${column}`);
         let tileTextureByClass: TileTexture = TileTexture.SAND;
@@ -139,36 +139,14 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         return tileTextureByClass;
     };
 
-    const isOppositeDirection = (direction: Direction, compareDirection: Direction): boolean => {
-        if(!direction || !compareDirection) throw new Error('Cannot detect opposite direction used.');
+    const isOppositeDirection = useCallback((direction: Direction): boolean => {
+        if(!direction) throw new Error('Cannot detect opposite direction used.');
     
         const nextMove: GridCoordinates = nextMoveCoordinates(direction);
-        const tileType = getTileTypeByCoordinate(nextMove);
+        const tileType = getTileTextureByCoordinate(nextMove);
 
         return tileType === "body";
-
-        // let isOppositeDirection: boolean = false;
-    
-        // switch(direction) {
-        //     case Direction.UP:
-        //         if (compareDirection === Direction.DOWN) { isOppositeDirection = true; }
-        //         break;
-    
-        //     case Direction.DOWN:
-        //         if(compareDirection === Direction.UP) isOppositeDirection = true;
-        //         break;
-    
-        //     case Direction.LEFT: 
-        //         if(compareDirection === Direction.RIGHT) isOppositeDirection = true;
-        //         break;
-    
-        //     case Direction.RIGHT:
-        //         if(compareDirection === Direction.LEFT) isOppositeDirection = true;
-        //         break;
-        // }
-        
-        // return isOppositeDirection;
-    };
+    }, [nextMoveCoordinates]);
  
     const getValidRandomDirection = useCallback((): Direction => {
         // set directional options
@@ -207,7 +185,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             const runValidationChecks = async () => {
                 // TODO: Instead of having this isOppositeDirection check use the wormDirection to compare,
                 //       we should check to see if nextMove in this direction is a body tile 
-                const moveInOppositeDirection: boolean = isOppositeDirection(inputDirection, wormDirection);
+                const moveInOppositeDirection: boolean = isOppositeDirection(inputDirection);
 
                 if (moveInOppositeDirection) {
                     isValid = false;
@@ -230,7 +208,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
         return isValid;
 
-    }, [wormDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
+    }, [isOppositeDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
 
     const determineSandwormDirection = useCallback(() => {
         /*
