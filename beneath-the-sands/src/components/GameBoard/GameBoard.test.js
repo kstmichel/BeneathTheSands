@@ -903,16 +903,398 @@ describe("Gameboard Rendering", () => {
       });
     });
 
-  //describe('Context updates based on actions', () => {});
+    describe('Food Interaction Effects', () => {
+        test('the sandworm grows in length after eating food', async () => {
+          /*  GIVEN the board renders,
+              AND next move collides with food tile
+              AND we wait for one move
+              THEN the sandworm eats the food item
+              AND increases body length by 1  */
 
-  /* 4. Sandworm grows in length when it eats a food item
-        GIVEN the board renders,
-        WHEN user input is detected
-        AND next move collides with food tile
-        THEN the sandworm increases by one tile length
-        AND the score increases
-        AND the speed increases
-  */
+              act(() => {
+                resizeWindow(desktopWidth, desktopHeight);
+              });
+
+              const assertWormLength = 5; 
+
+              let testLengthIncreaseContext = {
+                wormLength: 4,
+                speed: 300,
+                foodEaten: 0,
+                score: 0,
+                level: 1,
+                gameOver: false,
+                gameWon: false,
+                increaseFoodEaten: () => increaseFoodEatenTest(),
+                nextLevel: () => console.log("increase level"),
+                victoryDance: () => console.log("winner"),
+                oopsYouLost: () => console.log("loser"),
+              };
+
+              const increaseFoodEatenTest = () => testLengthIncreaseContext.wormLength += 1;
+
+              const foodTestLocations = [
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 7, column: 7 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 10, column: 10 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 12, column: 12 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 14, column: 14 },
+                }
+              ];
+
+              const growInLengthTestData = {
+                data: {
+                  sandWorm: [
+                    {
+                      key: 0,
+                      part: WormAnatomy.HEAD,
+                      location: { row: 7, column: 6 },
+                    },
+                    {
+                      key: 1,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 5 },
+                    },
+                    {
+                      key: 2,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 4 },
+                    },
+                    {
+                      key: 3,
+                      part: WormAnatomy.TAIL,
+                      location: { row: 7, column: 3 },
+                    },
+                  ],
+                  food: foodTestLocations,
+                  startDirection: Direction.RIGHT,
+                },
+              };
+
+              render(
+                <MockGameProvider value={testLengthIncreaseContext}>
+                  <App {...growInLengthTestData} />
+                </MockGameProvider>
+              );
+
+              // wait for sandworm to render
+              await waitFor(() => {
+                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                  const { row, column } = segment.location;
+                  const tile = screen.getByTestId(`tile-${row}-${column}`);
+                  expect(tile).toHaveClass(
+                    `tile-texture--${segment.part.toLowerCase()}`
+                  );
+                });
+              });
+
+              // wait one sandworm move
+              act(() => {
+                jest.advanceTimersByTime(testContext.speed);
+              });
+
+              //assert that head tile exists on a food coordinate
+              await waitFor(() => {
+                const {row, column} = growInLengthTestData.data.food[0].location;
+                const tile = screen.getByTestId(`tile-${row}-${column}`);
+                expect(tile).toHaveClass('tile-texture--head');
+              });
+
+              act(() => {
+                testLengthIncreaseContext.increaseFoodEaten();
+              })
+
+              //assert game context is updated to increase body by 1 tile
+              await waitFor(() => {
+                expect(testLengthIncreaseContext.wormLength).toEqual(assertWormLength);
+              });
+
+              //assert new sandworm length renders in gameboard
+              await waitFor(() => {
+                const headTile = screen.getAllByTestId('tile-type-head');
+                const bodyTiles = screen.getAllByTestId('tile-type-body');
+                const tailTile = screen.getAllByTestId('tile-type-tail');
+                const totalRenderedSandwormTiles = headTile.length + bodyTiles.length + tailTile.length;
+
+                expect(totalRenderedSandwormTiles).toStrictEqual(assertWormLength);
+              });
+        });
+
+        it('score increases after eating food', async() => {
+          /*  GIVEN the board renders,
+              AND next move collides with food tile
+              AND we wait for one move
+              THEN the sandworm eats the food item
+              AND the score increases by 100 */
+
+              act(() => {
+                resizeWindow(desktopWidth, desktopHeight);
+              });
+
+              const assertScore = 100; 
+
+              let testLengthIncreaseContext = {
+                wormLength: 4,
+                speed: 300,
+                foodEaten: 0,
+                score: 0,
+                level: 1,
+                gameOver: false,
+                gameWon: false,
+                increaseFoodEaten: () => increaseFoodEatenTest(),
+                nextLevel: () => console.log("increase level"),
+                victoryDance: () => console.log("winner"),
+                oopsYouLost: () => console.log("loser"),
+              };
+
+              const increaseFoodEatenTest = () => {
+                testLengthIncreaseContext.foodEaten += 1;
+            
+                increaseWormLength();
+                increaseScore();
+                increaseSpeed();
+              }
+          
+              const increaseWormLength = () => testLengthIncreaseContext.wormLength += 1;
+              const increaseScore = () => testLengthIncreaseContext.score += 100;
+              const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
+
+              const foodTestLocations = [
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 7, column: 7 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 10, column: 10 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 12, column: 12 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 14, column: 14 },
+                }
+              ];
+
+              const growInLengthTestData = {
+                data: {
+                  sandWorm: [
+                    {
+                      key: 0,
+                      part: WormAnatomy.HEAD,
+                      location: { row: 7, column: 6 },
+                    },
+                    {
+                      key: 1,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 5 },
+                    },
+                    {
+                      key: 2,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 4 },
+                    },
+                    {
+                      key: 3,
+                      part: WormAnatomy.TAIL,
+                      location: { row: 7, column: 3 },
+                    },
+                  ],
+                  food: foodTestLocations,
+                  startDirection: Direction.RIGHT,
+                },
+              };
+
+              render(
+                <MockGameProvider value={testLengthIncreaseContext}>
+                  <App {...growInLengthTestData} />
+                </MockGameProvider>
+              );
+
+              // wait for sandworm to render
+              await waitFor(() => {
+                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                  const { row, column } = segment.location;
+                  const tile = screen.getByTestId(`tile-${row}-${column}`);
+                  expect(tile).toHaveClass(
+                    `tile-texture--${segment.part.toLowerCase()}`
+                  );
+                });
+              });
+
+              // wait one sandworm move
+              act(() => {
+                jest.advanceTimersByTime(testContext.speed);
+              });
+
+              //assert that head tile exists on a food coordinate
+              await waitFor(() => {
+                const {row, column} = growInLengthTestData.data.food[0].location;
+                const tile = screen.getByTestId(`tile-${row}-${column}`);
+                expect(tile).toHaveClass('tile-texture--head');
+              });
+
+              act(() => {
+                testLengthIncreaseContext.increaseFoodEaten();
+              })
+
+              //assert game context is updated to increase body by 1 tile
+              await waitFor(() => {
+                expect(testLengthIncreaseContext.score).toEqual(assertScore);
+              });
+        });
+
+        it('speed increases after eating food', async() => {
+          /*  GIVEN the board renders,
+              AND next move collides with food tile
+              AND we wait for one move
+              THEN the sandworm eats the food item
+              AND the speed increases by 50ms */
+
+              act(() => {
+                resizeWindow(desktopWidth, desktopHeight);
+              });
+
+              const assertSpeed = 250; 
+
+              let testLengthIncreaseContext = {
+                wormLength: 4,
+                speed: 300,
+                foodEaten: 0,
+                score: 0,
+                level: 1,
+                gameOver: false,
+                gameWon: false,
+                increaseFoodEaten: () => increaseFoodEatenTest(),
+                nextLevel: () => console.log("increase level"),
+                victoryDance: () => console.log("winner"),
+                oopsYouLost: () => console.log("loser"),
+              };
+
+              const increaseFoodEatenTest = () => {
+                testLengthIncreaseContext.foodEaten += 1;
+            
+                increaseWormLength();
+                increaseScore();
+                increaseSpeed();
+              }
+          
+              const increaseWormLength = () => testLengthIncreaseContext.wormLength += 1;
+              const increaseScore = () => testLengthIncreaseContext.score += 100;
+              const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
+
+              const foodTestLocations = [
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 7, column: 7 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 10, column: 10 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 12, column: 12 },
+                },
+                { 
+                  key: 1,
+                  variant: 'soulFood',
+                  location: {row: 14, column: 14 },
+                }
+              ];
+
+              const growInLengthTestData = {
+                data: {
+                  sandWorm: [
+                    {
+                      key: 0,
+                      part: WormAnatomy.HEAD,
+                      location: { row: 7, column: 6 },
+                    },
+                    {
+                      key: 1,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 5 },
+                    },
+                    {
+                      key: 2,
+                      part: WormAnatomy.BODY,
+                      location: { row: 7, column: 4 },
+                    },
+                    {
+                      key: 3,
+                      part: WormAnatomy.TAIL,
+                      location: { row: 7, column: 3 },
+                    },
+                  ],
+                  food: foodTestLocations,
+                  startDirection: Direction.RIGHT,
+                },
+              };
+
+              render(
+                <MockGameProvider value={testLengthIncreaseContext}>
+                  <App {...growInLengthTestData} />
+                </MockGameProvider>
+              );
+
+              // wait for sandworm to render
+              await waitFor(() => {
+                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                  const { row, column } = segment.location;
+                  const tile = screen.getByTestId(`tile-${row}-${column}`);
+                  expect(tile).toHaveClass(
+                    `tile-texture--${segment.part.toLowerCase()}`
+                  );
+                });
+              });
+
+              // wait one sandworm move
+              act(() => {
+                jest.advanceTimersByTime(testContext.speed);
+              });
+
+              //assert that head tile exists on a food coordinate
+              await waitFor(() => {
+                const {row, column} = growInLengthTestData.data.food[0].location;
+                const tile = screen.getByTestId(`tile-${row}-${column}`);
+                expect(tile).toHaveClass('tile-texture--head');
+              });
+
+              act(() => {
+                testLengthIncreaseContext.increaseFoodEaten();
+              })
+
+              //assert game context is updated to increase body by 1 tile
+              await waitFor(() => {
+                expect(testLengthIncreaseContext.speed).toEqual(assertSpeed);
+              });
+
+        });
+    });
 
 
   //test('Food is removed from pantry once placed on the board', () => {});

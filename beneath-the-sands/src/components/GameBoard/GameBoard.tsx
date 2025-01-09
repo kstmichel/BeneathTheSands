@@ -324,6 +324,59 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         }
 
     }, [deviceSize])
+
+    const addWormSegment = useCallback(async() => {
+        let growSandWormData = [...sandWorm];
+        const tailIndex: number = growSandWormData.length - 1;
+        const newBody = {...growSandWormData[tailIndex]}; //copy tail segment's location
+        newBody.part = WormAnatomy.BODY;
+
+        growSandWormData.splice(tailIndex, 0, newBody); // add new body segment to sandworm segment array
+
+        // update key and location for each sandworm segment
+        growSandWormData = growSandWormData.map((segment, index) => {
+            let newLocation: GridCoordinates = {...segment.location};
+
+            if(segment.part === WormAnatomy.TAIL) {
+                // to give the illusion the sandworm grew, update tail coordinate by locating the tile behind sandworm
+                const oppositeDirection = getOppositeDirection(wormPath[wormLength - 2])
+                const nextMove: NextMove = getNextMove(newLocation, oppositeDirection);
+                newLocation = nextMove.coordinates;
+            }   
+
+            return {
+                key: index,
+                part: segment.part,
+                location: {
+                    ...newLocation
+                }
+            } as WormSegment
+        });
+
+        setSandWorm([...growSandWormData]);
+    }, [sandWorm, wormPath, wormLength]);
+
+    // Increase sandworm length when context worm length increases
+    useEffect(() => {
+        if (sandWorm.length < wormLength) {
+            const increaseSandWormLength = async() => {
+                await addWormSegment();
+            }
+
+            increaseSandWormLength();
+        }
+       
+    }, [wormLength, sandWorm, addWormSegment])
+
+    //Extend worm path when sandworm length increases
+    useEffect(() => {
+        if (wormPath.length > 0 && wormPath.length < sandWorm.length) {
+            const newWormPath = extendWormPath(wormLength, wormPath);
+            setWormPath(newWormPath);
+        }
+   
+    }, [wormLength, wormPath, sandWorm]);
+
     return (
         <>
          <Box data-testid="game-board" >
