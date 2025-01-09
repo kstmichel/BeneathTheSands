@@ -34,7 +34,7 @@ interface GameBoardProps {
 function GameBoard({windowSize, gameData}: GameBoardProps) {
     const initialRef = useRef(true);
 
-    const { level, speed, wormLength, score, foodEaten, gameOver, gameWon, increaseSpeed } = useGameContext();
+    const { wormLength, level, speed, score, foodEaten, gameOver, gameWon, increaseFoodEaten } = useGameContext();
 
     const isMobile = windowSize.width <= 768;
     const isTablet = windowSize.width <= 1024;
