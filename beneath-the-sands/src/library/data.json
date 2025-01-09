@@ -35,9 +35,33 @@
         }
     ],
     "food": [
-        { "row": 3, "column": 3 },
-        { "row": 5, "column": 7 },
-        { "row": 8, "column": 1 },
-        { "row": 9, "column": 9 }
+        { 
+            "variant": "soulFruit", 
+            "location": {
+                "row": 3, 
+                "column": 3 
+            }
+        },
+        { 
+            "variant": "soulFruit", 
+            "location": {
+                "row": 5, 
+                "column": 7 
+            }
+        },
+        { 
+            "variant": "soulFruit", 
+            "location": {
+                "row": 8, 
+                "column": 1 
+            }
+        },
+        { 
+            "variant": "soulFruit", 
+            "location": {
+                "row": 9, 
+                "column": 9
+            }
+        }
     ]
 }
