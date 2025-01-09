@@ -265,6 +265,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         }
     };
         
+    // Initialize Gameboard Component
     useEffect(() => {
         const initializeGame = async () => {
             // Initialize the grid based on the Device size
@@ -299,17 +300,13 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [isMobile, isTablet, initGameBoardGrid]);
 
+    // Sandworm Speed
     useEffect(() => {
         if(tempGameOver) return; 
 
         const interval = setInterval(() => {
-            // TODO: Check for collisions with walls, food, or itself
-
-            // Update the grid with the new worm position
             moveSandWorm();
             setTimer((prevTimer) => prevTimer + speed);
-
-            // TODO: Update the game state (score, worm length, food eaten, etc.)
 
         }, speed);
 
@@ -380,15 +377,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     return (
         <>
          <Box data-testid="game-board" >
-            {/* 
-            Suggested Grid Sizes:
-                - Small Screens (Mobile):
-                  15x10: Great for a smaller Device, keeps gameplay focused.
-                - Medium Screens (Tablets/Small Monitors):
-                  20x11: Provides a good balance of challenge and visibility.
-                - Large Screens (Desktops):
-                  30x15: Allows for more complex movement and strategies. 
-            */}
 
             {deviceSize}: {totalTiles} tiles
             <Typography variant="body1">
