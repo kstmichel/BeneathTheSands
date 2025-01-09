@@ -199,82 +199,53 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, determineSandwormNextMove]);
 
-    const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
-        let desertTextureGrid = Array.from({ length: rows }, () =>
-            Array.from({ length: columns }, () => ""));
-    
-        const desertWithGameAssets = desertTextureGrid.map((row, rowIndex) => {
+    const createGameBoardGrid = useCallback(async(boardDimensions: Dimension): Promise<GameGrid> => {
+        if(!boardDimensions.rows || boardDimensions.rows === 0 || !boardDimensions.columns || boardDimensions.columns === 0) throw new Error('Cannot create game board.');
 
-            return row.map((column, columnIndex) => {
+        const gameDimensions: Dimension = {...boardDimensions};
+        let desertGameBoard: GameGrid = getGridArray(gameDimensions);
 
-                // Check if the current tile is part of the worm
-                const wormPart = sandWorm.find((segment): segment is WormSegment => {
-                    const { location } = segment;
+        sandWorm.forEach((segment) => {
+            const {row, column} = segment.location;
+            const sandWormTile: Tile = {...desertGameBoard[row][column]};
 
-                    return location.row === rowIndex && location.column === columnIndex;
-                });
-
-                if (wormPart) {
-                    // Return the corresponding worm part (head, body, or tail)
-                    return wormPart.part;
-                }
-            
-                // Check if the current tile is a food position
-                const foodLocationDetected = food.find((location) => {
-                    return location.row === rowIndex && location.column === columnIndex;
-                });
-
-                if (foodLocationDetected) {
-                    return TileTexture.FOOD;
-                }
-
-                return column; // defaults to empty string for sand
-            });
+            desertGameBoard[row][column] = {
+                ...sandWormTile,
+                type: segment.part,
+                data: {...segment}
+            }
         });
-        
-        return desertWithGameAssets;
+
+        food.forEach((foodItem: Food) => {
+            const {row, column} = foodItem.location;
+            const foodTile: Tile = {...desertGameBoard[row][column]};
+
+            desertGameBoard[row][column] = {
+                ...foodTile,
+                type: GroundTexture.FOOD,
+                data: {...foodItem}
+            }
+        });
+
+        return Promise.resolve(desertGameBoard);
      }, [sandWorm, food]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
+        const gameDimensions: Dimension = {...GameDimensions[deviceType]}
+        const gameboardGrid = await createGameBoardGrid(gameDimensions);
+        const gamefield: GameField = {tileGrid: gameboardGrid, boardSize: gameDimensions};
+        const initialWormPath: Direction[] = setupWormPath(wormLength, wormDirection);
+        
         setDeviceType(deviceType);
-
-        // gameboard tile state
-        const tileSize: number = updateTileSize(deviceType);
-        setTileSize(tileSize);
-        setTotalTiles(getTotalTiles(deviceType)); 
-
-        const rows = GameDimensions[deviceType].rows;
-        const columns = GameDimensions[deviceType].columns;
-
-        setTotalRows(rows);
-        setTotalColumns(columns);
-
-        const gridTexture = await generateTileTextureGrid(rows, columns);
-
-        setGrid(gridTexture);
-
-        let initialWormPath: Direction[] = [];
-
-        for(let i = 0; i <= wormLength - 1; i++) {
-            initialWormPath.push(Direction.RIGHT);
-        }
-
+        setTileSize(getTileSize(window, deviceType));
+        setGameField(gamefield);
         setWormPath(initialWormPath)
 
-    }, [generateTileTextureGrid, wormLength]);
+        // To Be Removed -- For Dev Purposes Only -- 
+        const totalTiles: number = getTotalTiles(gameDimensions);
+        setTotalTiles(totalTiles); 
 
-    const updateTileSize = (deviceType: Device): number => {
-        const containerWidth = window.innerWidth * 0.9;
-        const containerHeight = window.innerHeight * 0.9;
-
-        // Calculate the maximum possible size for a square tile
-        const size = Math.min(
-            containerWidth / GameDimensions[deviceType].columns,
-            containerHeight / GameDimensions[deviceType].rows
-        );
-
-        return size;
-    };
+    }, [createGameBoardGrid, wormLength, wormDirection]);
 
     // Add listener for Arrow keys input
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -303,6 +274,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 ? Device.Tablet 
                 : Device.Desktop;
 
+            setDeviceType(deviceType);
+
             // initial render has occurred
             if (initialRef.current) {
                 initialRef.current = false;
@@ -313,7 +286,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             window.addEventListener('keydown', handleKeyDown);
             
             // Update size on window resize
-            const handleResize = () => updateTileSize(deviceType);
+            const handleResize = () => getTileSize(window, deviceType);
             window.addEventListener("resize", handleResize);
 
             return () => {
@@ -345,6 +318,12 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [moveSandWorm, tempGameOver, speed, timer]);
 
+    useEffect(() => {
+        if(deviceSize){
+            setGameField((prevGameField) => ({...prevGameField, boardSize: GameDimensions[deviceSize] as Dimension}));
+        }
+
+    }, [deviceSize])
     return (
         <>
          <Box data-testid="game-board" >
@@ -357,12 +336,13 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 - Large Screens (Desktops):
                   30x15: Allows for more complex movement and strategies. 
             */}
+
             {deviceSize}: {totalTiles} tiles
             <Typography variant="body1">
-                Total Rows: {totalRows} 
+                Total Rows: {gameField.boardSize?.rows} 
             </Typography>
             <Typography variant="body1">
-                Total Columns: {totalColumns}
+                Total Columns: {gameField.boardSize?.columns}
             </Typography>
             <Typography variant="body1">
                 Head Coordinate: {sandWorm[0]?.location.row}, {sandWorm[0]?.location.column}
@@ -389,19 +369,18 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 wrap="wrap" 
                 className="grid-container"
                 style={{
-                    gridTemplateColumns: `repeat(${totalRows}, 1fr)`,
-                    gridTemplateRows: `repeat(${totalColumns}, 1fr)`,
+                    gridTemplateColumns: `repeat(${gameField.boardSize?.columns}, 1fr)`,
+                    gridTemplateRows: `repeat(${gameField.boardSize?.rows}, 1fr)`,
                   }}
             >
                 {
-                    grid && grid.map((row, rowIndex) => (
+                    gameField.tileGrid && gameField.tileGrid.map((row, rowIndex) => (
                         <Grid container direction="row" key={rowIndex} wrap="nowrap" className="m-auto">
-                            {row.map((tile, columnIndex) => (
+                            {row.map((tile: Tile, columnIndex: number) => (
                                 <GameTile 
                                     key={columnIndex}
-                                    texture={tile as TileTexture} 
-                                    size={tileSize}         
-                                    coordinate={{row: rowIndex, column: columnIndex}}
+                                    tile={tile}    
+                                    size={tileSize}
                                     onCollision={()=> console.log('collision')} />
                             ))}
                         </Grid>

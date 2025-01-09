@@ -2,10 +2,11 @@
  * Test suite for the GameBoard component.
  * 
  * This suite includes tests for:
+ * - Responding to different screen sizes
  * - Rendering the grid
  * - Handling user input
- * - Updating the game state
- * - Responding to different screen sizes
+ * - Sandworm default behavior
+ * - Food Interacting Effects
  * 
  * Device Screen Sizes:
  * - Desktop: 1030x768
@@ -19,24 +20,10 @@
  * 
  * Utility Functions:
  * - resizeWindow(width, height): Resizes the window to the specified width and height.
- * 
- * Jest Configuration:
- * - jest.useFakeTimers(): Uses fake timers for Jest.
- * - afterEach(cleanup): Cleans up after each test.
- * 
- * Test Cases:
- * - Gameboard renders correctly
- *   - Displays correct number of tiles for different screen sizes
- *   - Renders board elements correctly
- * - Sandworm Behavior
- *   - Default Behavior (No Input)
- *   - Input Behavior
- * - Context updates based on actions
- * - State updates based on actions
- * - Game states (win/lose)
  */
 
 import React from "react";
+
 import {
   render,
   screen,
@@ -44,17 +31,20 @@ import {
   cleanup,
   waitFor,
   fireEvent,
-  throwError
 } from "@testing-library/react";
+
 import App from "../../App";
-import { getTotalTiles } from "../../library/utils";
+
 import {
   GameDimensions,
+  Device,
   Direction,
   WormAnatomy,
 } from "../../library/definitions";
+
 import { MockGameProvider } from "../../GameContext";
-import "@testing-library/jest-dom"; // Ensure this import is present
+
+import "@testing-library/jest-dom"; 
 
 /*
   AREAS TO TEST:
@@ -109,10 +99,26 @@ const sandWormTestLocation = [
 ];
 
 const foodTestLocations = [
-  { row: 3, column: 3 },
-  { row: 5, column: 7 },
-  { row: 8, column: 1 },
-  { row: 9, column: 9 },
+  { 
+    key: 1,
+    variant: 'soulFood',
+    location: {row: 3, column: 3 },
+  },
+  { 
+    key: 1,
+    variant: 'soulFood',
+    location: {row: 5, column: 7 },
+  },
+  { 
+    key: 1,
+    variant: 'soulFood',
+    location: {row: 8, column: 1 },
+  },
+  { 
+    key: 1,
+    variant: 'soulFood',
+    location: {row: 9, column: 9 },
+  }
 ];
 
 const testWormData = {
@@ -151,7 +157,7 @@ describe("Gameboard Rendering", () => {
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
-        const totalTiles = getTotalTiles("desktop");
+        const totalTiles = GameDimensions[Device.Desktop].rows * GameDimensions[Device.Desktop].columns;
 
         expect(tiles.length).toBe(totalTiles);
       });
@@ -170,26 +176,58 @@ describe("Gameboard Rendering", () => {
 
       await waitFor(() => {
         const tabletTiles = screen.getAllByTitle("grid-tile");
-        const totalTiles = getTotalTiles("tablet");
+        const totalTiles = GameDimensions[Device.Tablet].rows * GameDimensions[Device.Tablet].columns;
 
         expect(tabletTiles.length).toBe(totalTiles);
       });
     });
 
     test("Mobile screen size", async () => {
+      const sandWormTestMobile = [
+        {
+          key: 0,
+          part: WormAnatomy.HEAD,
+          location: { row: 7, column: 7 },
+        },
+        {
+          key: 1,
+          part: WormAnatomy.BODY,
+          location: { row: 7, column: 6 },
+        },
+        {
+          key: 2,
+          part: WormAnatomy.BODY,
+          location: { row: 7, column: 5 },
+        },
+        {
+          key: 3,
+          part: WormAnatomy.TAIL,
+          location: { row: 7, column: 4 },
+        },
+      ];
+
+      const testWormMobileData = {
+        data: {
+          sandWorm: [...sandWormTestMobile],
+          food: foodTestLocations,
+          startDirection: Direction.RIGHT,
+        },
+      }
+     
+
       act(() => {
         resizeWindow(375, 812);
       });
 
       render(
         <MockGameProvider value={testContext}>
-          <App {...testWormData} />
+          <App {...testWormMobileData} />
         </MockGameProvider>
       );
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
-        const totalTiles = getTotalTiles("mobile");
+        const totalTiles = GameDimensions[Device.Mobile].rows * GameDimensions[Device.Mobile].columns;
         expect(tiles.length).toBe(totalTiles);
       });
     });
@@ -197,6 +235,10 @@ describe("Gameboard Rendering", () => {
 
   describe("Renders board elements correctly", () => {
     it("renders initial Sandworm location", async () => {
+      act(() => {
+        resizeWindow(desktopWidth, desktopHeight);
+      });
+
       render(
         <MockGameProvider value={testContext}>
           <App {...testWormData} />
@@ -212,11 +254,19 @@ describe("Gameboard Rendering", () => {
     });
 
     it("renders initial food locations", async () => {
-      render(<App {...testWormData} />);
+      act(() => {
+        resizeWindow(desktopWidth, desktopHeight);
+      });
+
+      render(
+        <MockGameProvider value={testContext}>
+          <App {...testWormData} />
+        </MockGameProvider>
+      );
 
       await waitFor(() => {
         foodTestLocations.forEach((food) => {
-          const { row, column } = food;
+          const { row, column } = food.location;
 
           const tile = screen.getByTestId(`tile-${row}-${column}`);
           expect(tile).toHaveClass(`tile-texture--food`);
@@ -371,8 +421,6 @@ describe("Gameboard Rendering", () => {
           jest.advanceTimersByTime(testContext.speed);
         });
 
-        //NOTE: This test is defaulted to the sandworm moving right into the right boundary,
-        //      so the only directions it can move is up or down (for now).
         const head = { ...testWormHitBoundaryData.data.sandWorm[0] };
         const testTileUp = 6;
         const testTileDown = 8;
@@ -468,7 +516,7 @@ describe("Gameboard Rendering", () => {
             resizeWindow(desktopWidth, desktopHeight);
           });
 
-          const boundaryTestData = {
+          const gameTestDataMoveRight = {
             data: {
               sandWorm: [
                 {
@@ -499,18 +547,16 @@ describe("Gameboard Rendering", () => {
 
           render(
             <MockGameProvider value={testContext}>
-              <App {...boundaryTestData} />
+              <App {...gameTestDataMoveRight} />
             </MockGameProvider>
           );
 
           // wait for sandworm to render
           await waitFor(() => {
-            boundaryTestData.data.sandWorm.forEach((segment) => {
+            gameTestDataMoveRight.data.sandWorm.forEach((segment) => {
               const { row, column } = segment.location;
               const tile = screen.getByTestId(`tile-${row}-${column}`);
-              expect(tile).toHaveClass(
-                `tile-texture--${segment.part.toLowerCase()}`
-              );
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
           }, 1000);
 
@@ -530,7 +576,7 @@ describe("Gameboard Rendering", () => {
               { row: 7, column: 9 }
             ];
 
-            boundaryTestData.data.sandWorm.forEach((segment, index) => {
+            gameTestDataMoveRight.data.sandWorm.forEach((segment, index) => {
                 const {row, column} = testSegmentValidLocation[index];
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
 
@@ -595,7 +641,7 @@ describe("Gameboard Rendering", () => {
 
            // wait one sandworm move
            act(() => {
-            jest.advanceTimersByTime(testContext.speed * 2);
+            jest.advanceTimersByTime(testContext.speed * 1);
           });
 
           await waitFor(() => {
@@ -626,26 +672,26 @@ describe("Gameboard Rendering", () => {
                 {
                   key: 0,
                   part: WormAnatomy.HEAD,
-                  location: { row: 7, column: 10 },
+                  location: { row: 5, column: 9 },
                 },
                 {
                   key: 1,
                   part: WormAnatomy.BODY,
-                  location: { row: 7, column: 9 },
+                  location: { row: 6, column: 9 },
                 },
                 {
                   key: 2,
                   part: WormAnatomy.BODY,
-                  location: { row: 7, column: 8 },
+                  location: { row: 7, column: 9 },
                 },
                 {
                   key: 3,
                   part: WormAnatomy.TAIL,
-                  location: { row: 7, column: 7 },
+                  location: { row: 8, column: 9 },
                 },
               ],
               food: foodTestLocations,
-              startDirection: Direction.DOWN,
+              startDirection: Direction.UP,
             },
           };
 
@@ -671,29 +717,28 @@ describe("Gameboard Rendering", () => {
 
           // wait one sandworm move
           act(() => {
-            jest.advanceTimersByTime(testContext.speed * 2);
+            jest.advanceTimersByTime(testContext.speed * 1);
           });
           
           await waitFor(() => {
             const testSegmentValidLocation = [
-              { row: 8, column: 9 },
-              { row: 8, column: 10 },
-              { row: 7, column: 10 },
+              { row: 5, column: 8 },
+              { row: 5, column: 9 },
+              { row: 6, column: 9 },
               { row: 7, column: 9 }
             ];
 
             leftArrowTestData.data.sandWorm.forEach((segment, index) => {
                 const {row, column} = testSegmentValidLocation[index];
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
-
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+;               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
           });
         });
       });
 
       describe('Continue in current direction upon invalid input', () => {
-          it("does not move in opposite direction", async () => {
+          it("does not reverse direction", async () => {
 
               /* GIVEN the board renders,
                  WHEN user input is detected
@@ -854,7 +899,6 @@ describe("Gameboard Rendering", () => {
                         expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
                     });
                   });
-
           });
       });
     });
@@ -870,7 +914,6 @@ describe("Gameboard Rendering", () => {
         AND the speed increases
   */
 
-  //describe('State updates based on actions', () => {});
 
   //test('Food is removed from pantry once placed on the board', () => {});
 
