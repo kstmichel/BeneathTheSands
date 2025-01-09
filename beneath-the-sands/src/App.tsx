@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import { GameProvider } from './GameContext';
 import { GameBoard } from './components';
-import { GridCoordinates, WormSegment, Direction } from './library/definitions';
+import { WormSegment, Food, Direction } from './library/definitions';
 
 interface AppProps {
   data: {
     sandWorm: WormSegment[],
-    food: GridCoordinates[],
+    food: Food[],
     startDirection: Direction,
   } 
 }

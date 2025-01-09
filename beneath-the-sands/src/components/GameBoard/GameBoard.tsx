@@ -3,8 +3,20 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameDimensions, Device, Direction, WormAnatomy, WormSegment, TileTexture, GridCoordinates} from '../../library/definitions';
-import { getTotalTiles, getLastItem, getRandomizedDirectionOptions } from '../../library/utils';
+import { GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
+import { validateNextMove, filterValidPossibleMoves, isBoundaryCollisionDetected} from '../../library/validation';
+import { 
+    setupWormPath, 
+    extendWormPath, 
+    getGridArray,
+    getTotalTiles,
+    getTileSize,
+    getOppositeDirection, 
+    addNewDirectionToWormPath, 
+    getDirectionByWormPath, 
+    getRandomizedPossibleDirections,
+    getNextMove 
+} from '../../library/utils';
 import { useGameContext } from '../../GameContext';
 
 interface GameBoardProps {
@@ -14,7 +26,7 @@ interface GameBoardProps {
     },
     gameData: {
         sandWorm: WormSegment[],
-        food: GridCoordinates[],
+        food: Food[],
         startDirection: Direction,
     }
 }
@@ -35,10 +47,11 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [totalRows, setTotalRows] = useState<number>(0);
     const [totalColumns, setTotalColumns] = useState<number>(0);
     const [grid, setGrid] = useState<string[][]>([]);
-    const [wormDirection, setWormDirection] = useState<Direction>(gameData.startDirection);
     const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm);
-    const [food, setFood] = useState<GridCoordinates[]>(gameData.food);
+    const [wormDirection, setWormDirection] = useState<Direction>(gameData.startDirection);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
+    const [food, setFood] = useState<Food[]>(gameData.food);
+
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
 

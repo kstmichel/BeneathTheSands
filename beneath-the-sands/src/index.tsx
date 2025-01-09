@@ -5,7 +5,7 @@ import App from './App';
 import './App.css';
 import reportWebVitals from './reportWebVitals';
 import gameData from './library/data.json';
-import { WormAnatomy, WormSegment, Direction } from './library/definitions';
+import { GameData, Direction, WormAnatomy, WormSegment, Food } from './library/definitions';
 
 const rootElement = document.getElementById('root');
 
@@ -14,19 +14,18 @@ if (rootElement) {
 
   const processedSandWormData: WormSegment[] = gameData.sandWorm.map((segment) => {
     const part = Object.values(WormAnatomy).find((value) => value === segment.part);
-    if (!part) {
-        throw new Error(`Invalid worm part: ${segment.part}`);
-    }
+    if (!part) throw new Error(`Invalid worm part: ${segment.part}`);
+
     return {
         ...segment,
         part
     };
   });
 
-  const initialGameData = {
-    sandWorm: processedSandWormData,
-    food: gameData.food,
-    startDirection: Direction.DOWN,
+  const initialGameData: GameData = {
+    sandWorm: processedSandWormData as WormSegment[],
+    food: gameData.food as Food[],
+    startDirection: Direction.RIGHT as Direction,
   }
 
   root.render(
