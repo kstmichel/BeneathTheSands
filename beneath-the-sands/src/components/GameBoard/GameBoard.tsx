@@ -42,11 +42,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [deviceSize, setDeviceType] = useState<Device | null>(null); //TODO: Can be removed after development
     const [timer, setTimer] = useState<number>(0);
 
+    const [gameField, setGameField] = useState<GameField>({tileGrid: [], boardSize: {rows: 0, columns: 0}});
     const [totalTiles, setTotalTiles] = useState<number>(0);
-    const [tileSize, setTileSize] = useState(20);
-    const [totalRows, setTotalRows] = useState<number>(0);
-    const [totalColumns, setTotalColumns] = useState<number>(0);
-    const [grid, setGrid] = useState<string[][]>([]);
+    const [tileSize, setTileSize] = useState<number>(0);
+
     const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm);
     const [wormDirection, setWormDirection] = useState<Direction>(gameData.startDirection);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
@@ -62,45 +61,48 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             tiles with the new location of the Sandworm.
         */
        
-        if (!grid || grid.length === 0 || !newWormLocation) return;
+        if (!gameField.tileGrid || gameField.tileGrid.length === 0 || !newWormLocation) return;
 
-        let updatedGrid = [...grid];
+        let updatedGrid = [...gameField.tileGrid];
 
         newWormLocation.forEach((segment: WormSegment) => {  
             const { part, location } = segment;
             const { row, column } = location;
 
-            if(isBoundaryCollisionDetected()) {
-                throw new Error(`sandworm has broken out of the boundary: ${row} ${column} ${part}`);
+            if(!updatedGrid[row] || !updatedGrid[row][column]) {
+                throw new Error('Cannot access grid coordinates.');
             }
 
             updatedGrid[row] = [...updatedGrid[row]];
-            updatedGrid[row][column] = part;
-            
+            const prevTileData = updatedGrid[row][column];
+
+            updatedGrid[row][column] = {
+                ...prevTileData,
+                type: part,
+                data: segment
+            }
+
             // reset old tail with sand texture to give sandworm the illusion of moving across sand.
             if (part === 'tail') {
-                const tailDirection = getLastItem(wormPath);
+                const tailDirection = wormPath[wormPath.length - 1];;
 
                 switch (tailDirection) {
                     case Direction.RIGHT:
-                        updatedGrid[row][column - 1] = TileTexture.SAND;
+                        updatedGrid[row][column - 1].type = GroundTexture.SAND;
                         break;
                     case Direction.LEFT:
-                        updatedGrid[row][column + 1] = TileTexture.SAND;
+                        updatedGrid[row][column + 1].type = GroundTexture.SAND;
                         break;
                     case Direction.UP:
-                        updatedGrid[row + 1][column] = TileTexture.SAND;
+                        updatedGrid[row + 1][column].type = GroundTexture.SAND;
                         break;
                     case Direction.DOWN:
-                        updatedGrid[row - 1][column] = TileTexture.SAND;
+                        updatedGrid[row - 1][column].type = GroundTexture.SAND;
                         break;
                 }
             }
         }); 
 
-        setGrid(updatedGrid);
-
-    }, [grid, wormPath, isBoundaryCollisionDetected]);
 
     const nextMoveCoordinates = useCallback((direction: Direction) => {
         const wormHead: WormSegment = sandWorm[0]; 
@@ -122,10 +124,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
                 break;
         }
+        setGameField((prevGameField) => ({...prevGameField, tileGrid: updatedGrid}));
 
-        return nextLocation;
+    }, [gameField, wormPath]);
 
-    }, [sandWorm]);
 
     const getTileTextureByCoordinate = (coordinates: GridCoordinates): TileTexture => {
         const {row, column} = coordinates;
