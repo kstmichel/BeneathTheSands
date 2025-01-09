@@ -103,116 +103,17 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             }
         }); 
 
-
-    const nextMoveCoordinates = useCallback((direction: Direction) => {
-        const wormHead: WormSegment = sandWorm[0]; 
-        let nextLocation: GridCoordinates = {...wormHead.location};
-
-        switch (direction) {
-            case Direction.RIGHT:
-                nextLocation.column += 1
-                break;
-            case Direction.LEFT:
-                nextLocation.column -= 1
-                break;
-            case Direction.UP:
-                nextLocation.row -= 1
-
-                break;
-            case Direction.DOWN:
-                nextLocation.row += 1
-
-                break;
-        }
         setGameField((prevGameField) => ({...prevGameField, tileGrid: updatedGrid}));
 
     }, [gameField, wormPath]);
 
 
-    const getTileTextureByCoordinate = (coordinates: GridCoordinates): TileTexture => {
-        const {row, column} = coordinates;
-        const tileByCoordinates = document.getElementById(`tile-${row}-${column}`);
-        let tileTextureByClass: TileTexture = TileTexture.SAND;
-
-        for (const texture in TileTexture) {
-            const tileTexture = texture.toLowerCase();
-            if (tileByCoordinates?.classList.contains(`tile-texture--${tileTexture}`)) {
-                tileTextureByClass = TileTexture[texture as keyof typeof TileTexture];
-                break;
-            }
-        }
-
-        return tileTextureByClass;
-    };
-
-    const isOppositeDirection = useCallback((direction: Direction): boolean => {
-        if(!direction) throw new Error('Cannot detect opposite direction used.');
-    
-        const nextMove: GridCoordinates = nextMoveCoordinates(direction);
-        const tileType = getTileTextureByCoordinate(nextMove);
-
-        return tileType === "body";
-    }, [nextMoveCoordinates]);
- 
-    const getValidRandomDirection = useCallback((): Direction => {
-        // set directional options
-        const directionalOptions: Direction[] = wormDirection === Direction.RIGHT || wormDirection === Direction.LEFT
-            ? [Direction.UP, Direction.DOWN]
-            : [Direction.LEFT, Direction.RIGHT];
-
-        const randomizedOptions: Direction[] = getRandomizedDirectionOptions(directionalOptions);
-
-        const validDirections = randomizedOptions.filter((randomDirection: Direction) => {
-            const nextMove: GridCoordinates = nextMoveCoordinates(randomDirection);
-            return !isBoundaryCollisionDetected(nextMove); 
         });
 
-        if(validDirections.length === 0) {
-            throw new Error(`No safe directions were found: options: ${randomizedOptions}`);
-        }
-        
-        return validDirections[0]; // return first valid direction
 
-    }, [wormDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
-
-    const getDirectionByWormPath = useCallback((path: Direction[], segment: WormSegment): Direction => {
-        if(!path || path.length === 0) throw new Error('Worm path is null or empty.');
-
-        return path[segment.key];
-    }, []);
-
-    const validateInputDirection = useCallback((inputDirection: Direction | null) => {
-        if(!inputDirection) throw new Error('failed to validate input direction');
-
-        let isValid: boolean = true;
-
-        try {
-            // run validation functions
-            const runValidationChecks = async () => {
-                const moveInOppositeDirection: boolean = isOppositeDirection(inputDirection);
-
-                if (moveInOppositeDirection) {
-                    isValid = false;
-                    return; // no need to keep validating
-                }
-        
-                const nextMove: GridCoordinates = nextMoveCoordinates(inputDirection);
-                const moveCollidesWithBoundary: boolean = isBoundaryCollisionDetected(nextMove);
-             
-                if (moveCollidesWithBoundary){
-                    isValid = false;
-                }
-            }
-
-           runValidationChecks();
-
-        } catch {
-            throw new Error('input validation error occurred');
         }
 
-        return isValid;
 
-    }, [isOppositeDirection, nextMoveCoordinates, isBoundaryCollisionDetected]);
 
     const determineSandwormDirection = useCallback(() => {
         /*
@@ -253,25 +154,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             throw new Error(`Error occurred setting sandworm direction: ${error}`);
         }
     }, [getValidRandomDirection, inputDirection, isBoundaryCollisionDetected, nextMoveCoordinates, validateInputDirection, wormDirection]);
-
-    const applyWormPathChange = useCallback((direction: Direction) => {
-        /*  
-            Each item in the array represents a segment of the Sandworm ([H, B, B, T]), 
-            and the values are the direction in which that segment must move. 
-
-            Example Worm Path: [UP, RIGHT, RIGHT, DOWN]
-
-            The Worm path is updated with new HEAD direction inserted at beginning of array,
-            and last item in array is removed to record the sandworm path and move in a worm-like fashion.
-        */
-
-        let updatedWormPath = wormPath;
-
-        updatedWormPath.unshift(direction);
-        updatedWormPath.pop();
-
-        return updatedWormPath;
-    }, [wormPath]);
+    }, [inputDirection, wormDirection, sandWorm, gameField, getRandomValidNextMove]);
 
     const moveSandWorm = useCallback(async () => {
         if (!sandWorm || sandWorm.length === 0) {
