@@ -1,34 +1,9 @@
-
+export const initialWormLength = 4;
 
 export enum Device {
     Mobile = 'mobile',
     Tablet = 'tablet',
     Desktop = 'desktop'
-}
-
-export interface Dimension {
-    columns: number;
-    rows: number;
-}
-
-export const GameDimensions: Record<Device, Dimension> = {
-    [Device.Mobile]: {
-        columns: 15,
-        rows: 10
-    },
-    [Device.Tablet]: {
-        columns: 20,
-        rows: 11
-    },
-    [Device.Desktop]: {
-        columns: 30,
-        rows: 15
-    }
-}
-
-export interface GridCoordinates {
-    row: number;
-    column: number;
 }
 
 export enum Direction {
@@ -38,12 +13,9 @@ export enum Direction {
     RIGHT = "RIGHT"
 }
 
-export enum TileTexture {
+export enum GroundTexture {
     SAND = "sand",
     FOOD = "food", 
-    HEAD = "head", 
-    TAIL = "tail", 
-    BODY = "body"
 };
 
 export enum WormAnatomy {
@@ -52,8 +24,69 @@ export enum WormAnatomy {
     TAIL = "tail"
 }
 
-export interface WormSegment {
-    key: number,
-    part: WormAnatomy,
+export interface GameData {
+    sandWorm: WormSegment[],
+    food: Food[],
+    startDirection: Direction,
+}
+
+export type GameGrid = Tile[][];
+
+export interface Dimension {
+    rows: number;
+    columns: number;
+}
+
+export interface GameField {
+    tileGrid: GameGrid,
+    boardSize: Dimension
+}
+
+export const GameDimensions: Record<Device, Dimension> = {
+    [Device.Mobile]: {
+        rows: 10,
+        columns: 15
+    },
+    [Device.Tablet]: {
+        rows: 11,
+        columns: 20
+    },
+    [Device.Desktop]: {
+        rows: 15,
+        columns: 30
+    }
+}
+
+export interface GridCoordinates {
+    row: number;
+    column: number;
+}
+
+export interface Tile {
+    type: GroundTexture | WormAnatomy,
+    size: number,
+    data?: Sand | Food | WormSegment,
+}
+
+interface TileData {
     location: GridCoordinates
 }
+
+export interface NextMove {
+    direction: Direction,
+    coordinates: GridCoordinates,
+    tile?: Tile,
+}
+
+export interface Sand extends TileData {
+    variant: string,
+} 
+
+export interface Food extends TileData {
+    variant: string,
+} 
+
+export interface WormSegment extends TileData {
+    key: number,
+    part: WormAnatomy,
+} 

@@ -42,15 +42,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
 
-    const isBoundaryCollisionDetected = useCallback((coordinates?: GridCoordinates): boolean => {
-        const { row, column }: GridCoordinates = coordinates || sandWorm[0]?.location;
-        const yBoundaryCollision: boolean = row < 0 || row > (totalRows - 1);
-        const xBoundaryCollision: boolean = column < 0 || column > (totalColumns - 1);
-
-        return yBoundaryCollision || xBoundaryCollision;
-
-    }, [totalRows, totalColumns, sandWorm]);
-
     const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
             This function expects sandWorm to have updated segment locations 
