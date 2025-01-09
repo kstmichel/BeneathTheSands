@@ -165,40 +165,31 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         newSandwormLocation = await Promise.all(newSandwormLocation.map(async (segment) => {
 
             let updatedSegment: WormSegment = { ...segment };
-            let segmentDirection: Direction;
-
+            let newNextMove: NextMove;
+            
             if (segment.part === WormAnatomy.HEAD) {
-                segmentDirection = determineSandwormDirection();
-                setWormDirection(segmentDirection);
+                newNextMove = determineSandwormNextMove();
 
-                const updatedWormPath = applyWormPathChange(segmentDirection);
-                setWormPath(updatedWormPath);
+                const {row, column}: GridCoordinates = newNextMove.coordinates;
+                const nextTile: Tile = gameField.tileGrid[row][column];
+                
+                const isFoodEatenBySandwom: boolean = nextTile.type === GroundTexture.FOOD;
+
+                if (isFoodEatenBySandwom) {
+                    increaseFoodEaten();
+                }
+
+                setWormDirection(newNextMove.direction); // head controls general direction of sandworm
+                setWormPath(addNewDirectionToWormPath(newNextMove.direction, wormPath));
 
             } else {
                 // check the worm path for this segment's direction to modify it's location coordinates below.
-                segmentDirection = getDirectionByWormPath(wormPath, segment);
+                let segmentDirection: Direction = getDirectionByWormPath(wormPath, segment);
+                newNextMove = getNextMove(segment.location, segmentDirection);
             }
 
-            // update segment location
-            switch (segmentDirection) {
-                case Direction.RIGHT:
-                    updatedSegment.location.column += 1;
-    
-                break;
-                case Direction.LEFT:
-                    updatedSegment.location.column -= 1;
-    
-                break;
-                case Direction.UP:
-                    updatedSegment.location.row -= 1;
-    
-                break;
-                case Direction.DOWN:
-                    updatedSegment.location.row += 1;
-                
-                break;
-            }
-    
+            updatedSegment.location = {...newNextMove.coordinates}
+
             return updatedSegment;
         }));
 
@@ -206,7 +197,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         renderSandWormMovement(newSandwormLocation);
         setInputDirection(null); //reset input directions
 
-    }, [sandWorm, renderSandWormMovement, wormPath, getDirectionByWormPath, determineSandwormDirection, applyWormPathChange]);
+    }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, determineSandwormNextMove]);
 
     const generateTileTextureGrid = useCallback(async(rows: number, columns: number) => {
         let desertTextureGrid = Array.from({ length: rows }, () =>
