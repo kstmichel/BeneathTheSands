@@ -107,53 +107,51 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [gameField, wormPath]);
 
+    const getRandomValidNextMove = useCallback((coordinates: GridCoordinates): NextMove => {
+        const directionOptions: Direction[] = getRandomizedPossibleDirections(wormDirection); 
+        let nextMoveOptions: NextMove[] = [];
 
+        directionOptions.forEach((direction: Direction) => {
+            const nextMove: NextMove = getNextMove(coordinates, direction);
+            nextMoveOptions.push(nextMove);
         });
 
+        const validMoves: NextMove[] = filterValidPossibleMoves(nextMoveOptions, gameField);
 
+        if(validMoves.length === 0) {
+            throw new Error(`All next moves are invalid: ${nextMoveOptions}`);
         }
 
+        return validMoves[0]; // randomized valid direction
+    }, [gameField, wormDirection]);
 
-
-    const determineSandwormDirection = useCallback(() => {
-        /*
-            HEAD DIRECTIVE: Check to see if any input was detected and if so validate the input.
-                Invalid input: Ignore move request and continue in the current direction.
-                    1) Move in the opposite direction  2) Move into the boundary wall
-                Valid input: Update the current direction to the input direction.
-        */
-        
+    const determineSandwormNextMove: () => NextMove = useCallback(() => {
         try{
-            let headDirection = wormDirection; // default to worm's current direction
-            let nextMoveIsValidated: boolean = false;
+            const headCoordinates: GridCoordinates = sandWorm[0].location;
 
-            // Check to see if any user input was detected with arrow keys.
             if(inputDirection) {
                  // Validate the input and set direction if valid, otherwise default to the current direction;
-                const isValidInputDirection: boolean = validateInputDirection(inputDirection);
+                const nextMove: NextMove = getNextMove(headCoordinates, inputDirection);
 
-                if (isValidInputDirection){
-                    headDirection = inputDirection;
-                    nextMoveIsValidated = true;
+                if (validateNextMove(nextMove, gameField)){
+                    return nextMove;
                 }
             }
 
-            // if next move hasn't been validated yet, check for a boundary collision
-            if (!nextMoveIsValidated) {  
-                const nextMove: GridCoordinates = nextMoveCoordinates(headDirection);
+            // valid input wasn't found, check current worm direction and if invalid change direction
+            const nextMoveByDefault: NextMove = getNextMove(headCoordinates, wormDirection);
 
-                if (isBoundaryCollisionDetected(nextMove)) {
-                    // oops the sandworm hit the boundary, move it in a random direction to keep things spicy!
-                    headDirection = getValidRandomDirection(); 
-                }
+            if (isBoundaryCollisionDetected(nextMoveByDefault, gameField)) {
+                // Sandworm hit the boundary, move it in a random direction to keep things spicy!
+                // TODO: increase difficulty as levels progress where hitting boundary means user loses the game
+                return getRandomValidNextMove(headCoordinates);
             }
 
-            return headDirection;
+            return nextMoveByDefault; // default to current direction (no valid input or boundary collision)
 
         } catch (error) {
             throw new Error(`Error occurred setting sandworm direction: ${error}`);
         }
-    }, [getValidRandomDirection, inputDirection, isBoundaryCollisionDetected, nextMoveCoordinates, validateInputDirection, wormDirection]);
     }, [inputDirection, wormDirection, sandWorm, gameField, getRandomValidNextMove]);
 
     const moveSandWorm = useCallback(async () => {
