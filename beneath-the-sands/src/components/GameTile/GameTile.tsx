@@ -1,28 +1,32 @@
 import React from 'react';
 import Grid from '@mui/material/Grid2';
-import { TileTexture, GridCoordinates } from '../../library/definitions';
+import { Tile, GridCoordinates } from '../../library/definitions';
 
 export interface GameTileProps {
-    texture?: TileTexture;
+    tile: Tile;
     size: number;
-    coordinate: GridCoordinates;
     children?: React.ReactNode;
     onCollision: () => void;
 }
 
-const GameTile = ({texture, size, coordinate, children, onCollision}: GameTileProps) => {
-    const {row, column} = coordinate;
-    const tileTexture = texture || TileTexture.SAND;
+const GameTile = ({tile, size, children, onCollision}: GameTileProps) => {
+    if(!tile || !tile.data) throw new Error('Game tile rendering error occurred.');
+
+    const {type, data} = tile;
+    const {row, column} = data.location;
     
     return (
         <Grid 
             title="grid-tile"
             id={`tile-${row}-${column}`}
             data-testid={`tile-${row}-${column}`}
-            className={`grid-tile border-orange-200 border-2 tile-texture--${tileTexture}`}
+            className={`grid-tile border-orange-200 border-2 tile-texture--${type}`}
             style={{width: size, height: size}}
         >
-                <div className="grid-tile--content">
+                <div 
+                    data-testid={`tile-type-${type}`}
+                    className="grid-tile--content"
+                >
                     <h3>{children}</h3>
                 </div>
         </Grid>
