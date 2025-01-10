@@ -41,22 +41,33 @@ import {
   Direction,
   WormAnatomy,
 } from "../../library/definitions";
-
-import { MockGameProvider } from "../../GameContext";
-
 import "@testing-library/jest-dom"; 
+import { GameContext } from '../../GameContext';
 
-/*
-  AREAS TO TEST:
-    Rendering the grid
-    Handling user input
-    Updating the game state
-    Responding to different screen sizes
-*/
+const MockGameProvider = ({ children, value }) => {
+  return (
+    <GameContext.Provider value={value}>
+      {children}
+    </GameContext.Provider>
+  );
+};
 
-// Device Screen Sizes
-const desktopWidth = 1030;
-const desktopHeight = 768;
+jest.useFakeTimers();
+
+const desktopDimensions = {width: 1030, height: 768};
+const tabletDimensions = {width: 1000, height: 1024};
+const mobileDimensions = {width: 655, height: 812};
+
+function resizeWindow({width, height}) {
+  window.innerWidth = width;
+  window.innerHeight = height;
+  window.dispatchEvent(new Event("resize"));
+}
+
+afterEach(() => {
+  cleanup();
+});
+
 
 const testContext = {
   wormLength: 2,
@@ -75,85 +86,34 @@ const testContext = {
   oopsYouLost: () => console.log("loser"),
 };
 
-const sandWormTestLocation = [
-  {
-    key: 0,
-    part: WormAnatomy.HEAD,
-    location: { row: 7, column: 10 },
-  },
-  {
-    key: 1,
-    part: WormAnatomy.BODY,
-    location: { row: 7, column: 9 },
-  },
-  {
-    key: 2,
-    part: WormAnatomy.BODY,
-    location: { row: 7, column: 8 },
-  },
-  {
-    key: 3,
-    part: WormAnatomy.TAIL,
-    location: { row: 7, column: 7 },
-  },
-];
-
-const foodTestLocations = [
-  { 
-    key: 1,
-    variant: 'soulFood',
-    location: {row: 3, column: 3 },
-  },
-  { 
-    key: 1,
-    variant: 'soulFood',
-    location: {row: 5, column: 7 },
-  },
-  { 
-    key: 1,
-    variant: 'soulFood',
-    location: {row: 8, column: 1 },
-  },
-  { 
-    key: 1,
-    variant: 'soulFood',
-    location: {row: 9, column: 9 },
-  }
-];
-
-const testWormData = {
-  data: {
-    sandWorm: sandWormTestLocation,
-    food: foodTestLocations,
-    startDirection: Direction.RIGHT,
-  },
-};
-
-function resizeWindow(width, height) {
-  window.innerWidth = width;
-  window.innerHeight = height;
-  window.dispatchEvent(new Event("resize"));
-}
-
-jest.useFakeTimers();
-
-afterEach(() => {
-  cleanup();
-});
 
 // Rendering
 describe("Gameboard Rendering", () => {
   describe("Displays correct number of tiles", () => {
     test("Desktop screen size", async () => {
       act(() => {
-        resizeWindow(desktopWidth, desktopHeight);
+        resizeWindow(desktopDimensions);
       });
 
-      render(
-        <MockGameProvider value={testContext}>
-          <App {...testWormData} />
-        </MockGameProvider>
-      );
+      const testWormData = {
+        data: {
+          sandWorm: [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ],
+          food: [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ],
+          startDirection: Direction.RIGHT,
+        },
+      };
+
+      render(<App {...testWormData} />);
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
@@ -165,14 +125,28 @@ describe("Gameboard Rendering", () => {
 
     test("Tablet screen size", async () => {
       act(() => {
-        resizeWindow(1000, 1024);
+        resizeWindow(tabletDimensions);
       });
 
-      render(
-        <MockGameProvider value={testContext}>
-          <App {...testWormData} />
-        </MockGameProvider>
-      );
+      const testWormData = {
+        data: {
+          sandWorm: [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ],
+          food: [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ],
+          startDirection: Direction.RIGHT,
+        },
+      };
+
+      render(<App {...testWormData} />);
 
       await waitFor(() => {
         const tabletTiles = screen.getAllByTitle("grid-tile");
@@ -183,47 +157,29 @@ describe("Gameboard Rendering", () => {
     });
 
     test("Mobile screen size", async () => {
-      const sandWormTestMobile = [
-        {
-          key: 0,
-          part: WormAnatomy.HEAD,
-          location: { row: 7, column: 7 },
-        },
-        {
-          key: 1,
-          part: WormAnatomy.BODY,
-          location: { row: 7, column: 6 },
-        },
-        {
-          key: 2,
-          part: WormAnatomy.BODY,
-          location: { row: 7, column: 5 },
-        },
-        {
-          key: 3,
-          part: WormAnatomy.TAIL,
-          location: { row: 7, column: 4 },
-        },
-      ];
-
-      const testWormMobileData = {
-        data: {
-          sandWorm: [...sandWormTestMobile],
-          food: foodTestLocations,
-          startDirection: Direction.RIGHT,
-        },
-      }
-     
-
       act(() => {
-        resizeWindow(375, 812);
+        resizeWindow(mobileDimensions);
       });
 
-      render(
-        <MockGameProvider value={testContext}>
-          <App {...testWormMobileData} />
-        </MockGameProvider>
-      );
+      const testWormData = {
+        data: {
+          sandWorm: [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ],
+          food: [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ],
+          startDirection: Direction.RIGHT,
+        },
+      };
+
+      render(<App {...testWormData} />);
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
@@ -236,16 +192,31 @@ describe("Gameboard Rendering", () => {
   describe("Renders board elements correctly", () => {
     it("renders initial Sandworm location", async () => {
       act(() => {
-        resizeWindow(desktopWidth, desktopHeight);
+        resizeWindow(desktopDimensions);
       });
 
-      render(
-        <MockGameProvider value={testContext}>
-          <App {...testWormData} />
-        </MockGameProvider>
-      );
+      const testWormData = {
+        data: {
+          sandWorm: [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ],
+          food: [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ],
+          startDirection: Direction.RIGHT,
+        },
+      };
+
+      render(<App {...testWormData} />);
+
       await waitFor(() => {
-        sandWormTestLocation.forEach((segment) => {
+        testWormData.data.sandWorm.forEach((segment) => {
           const { row, column } = segment.location;
           const tile = screen.getByTestId(`tile-${row}-${column}`);
           expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
@@ -255,17 +226,31 @@ describe("Gameboard Rendering", () => {
 
     it("renders initial food locations", async () => {
       act(() => {
-        resizeWindow(desktopWidth, desktopHeight);
+        resizeWindow(desktopDimensions);
       });
 
-      render(
-        <MockGameProvider value={testContext}>
-          <App {...testWormData} />
-        </MockGameProvider>
-      );
+      const testWormData = {
+        data: {
+          sandWorm: [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ],
+          food: [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ],
+          startDirection: Direction.RIGHT,
+        },
+      };
+
+      render(<App {...testWormData} />);
 
       await waitFor(() => {
-        foodTestLocations.forEach((food) => {
+        testWormData.data.food.forEach((food) => {
           const { row, column } = food.location;
 
           const tile = screen.getByTestId(`tile-${row}-${column}`);
@@ -291,14 +276,28 @@ describe("Gameboard Rendering", () => {
         // NOTE: This test assumes sandworm is moving to the right
 
         act(() => {
-          resizeWindow(desktopWidth, desktopHeight);
+          resizeWindow(desktopDimensions);
         });
 
-        render(
-          <MockGameProvider value={testContext}>
-            <App {...testWormData} />
-          </MockGameProvider>
-        );
+        const testWormData = {
+          data: {
+            sandWorm: [
+              { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+              { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+              { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+              { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+            ],
+            food: [
+              { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+              { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+              { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+              { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+            ],
+            startDirection: Direction.RIGHT,
+          },
+        };
+  
+        render(<App {...testWormData} />);
 
         // set initial sandworm head column position
         let nextColumn = testWormData.data.sandWorm[0].location.column;
@@ -348,7 +347,7 @@ describe("Gameboard Rendering", () => {
         */
 
         act(() => {
-          resizeWindow(desktopWidth, desktopHeight);
+          resizeWindow(desktopDimensions);
         });
 
         // Setup Sandworm initial location to right before boundary wall (right)
@@ -357,28 +356,17 @@ describe("Gameboard Rendering", () => {
         const boundaryTestData = {
           data: {
             sandWorm: [
-              {
-                key: 0,
-                part: WormAnatomy.HEAD,
-                location: { row: 7, column: 10 },
-              },
-              {
-                key: 1,
-                part: WormAnatomy.BODY,
-                location: { row: 7, column: 9 },
-              },
-              {
-                key: 2,
-                part: WormAnatomy.BODY,
-                location: { row: 7, column: 8 },
-              },
-              {
-                key: 3,
-                part: WormAnatomy.TAIL,
-                location: { row: 7, column: 7 },
-              },
+              { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+              { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+              { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+              { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
             ],
-            food: foodTestLocations,
+            food: [
+              { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+              { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+              { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+              { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+            ],
             startDirection: Direction.RIGHT,
           },
         };
@@ -397,13 +385,10 @@ describe("Gameboard Rendering", () => {
           ...boundaryTestData,
           sandWorm: sandwormApproachingBoundary,
         };
+
         let testCoordinates = { ...sandwormApproachingBoundary[0].location }; // initialize test coordinates
 
-        render(
-          <MockGameProvider value={testContext}>
-            <App {...testWormHitBoundaryData} />
-          </MockGameProvider>
-        );
+        render(<App {...boundaryTestData} />);
 
         // wait for sandworm to render
         await waitFor(() => {
@@ -453,42 +438,29 @@ describe("Gameboard Rendering", () => {
       describe(`Change direction when upon valid input`, () => {
         it("moves up when UP arrow key is pressed", async () => {
           act(() => {
-            resizeWindow(desktopWidth, desktopHeight);
+            resizeWindow(desktopDimensions);
           });
 
           const boundaryTestData = {
             data: {
               sandWorm: [
-                {
-                  key: 0,
-                  part: WormAnatomy.HEAD,
-                  location: { row: 7, column: 10 },
-                },
-                {
-                  key: 1,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 9 },
-                },
-                {
-                  key: 2,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 8 },
-                },
-                {
-                  key: 3,
-                  part: WormAnatomy.TAIL,
-                  location: { row: 7, column: 7 },
-                },
+                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
               ],
-              food: foodTestLocations,
+              food: [
+                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+              ],
               startDirection: Direction.RIGHT,
             },
           };
 
           render(
-            <MockGameProvider value={testContext}>
               <App {...boundaryTestData} />
-            </MockGameProvider>
           );
 
           // wait for sandworm to render
@@ -513,42 +485,29 @@ describe("Gameboard Rendering", () => {
 
         it("moves right when RIGHT arrow key is pressed", async () => {
           act(() => {
-            resizeWindow(desktopWidth, desktopHeight);
+            resizeWindow(desktopDimensions);
           });
 
           const gameTestDataMoveRight = {
             data: {
               sandWorm: [
-                {
-                  key: 0,
-                  part: WormAnatomy.HEAD,
-                  location: { row: 7, column: 10 },
-                },
-                {
-                  key: 1,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 9 },
-                },
-                {
-                  key: 2,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 8 },
-                },
-                {
-                  key: 3,
-                  part: WormAnatomy.TAIL,
-                  location: { row: 7, column: 7 },
-                },
+                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
               ],
-              food: foodTestLocations,
+              food: [
+                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+              ],
               startDirection: Direction.RIGHT,
             },
           };
 
           render(
-            <MockGameProvider value={testContext}>
               <App {...gameTestDataMoveRight} />
-            </MockGameProvider>
           );
 
           // wait for sandworm to render
@@ -587,42 +546,29 @@ describe("Gameboard Rendering", () => {
 
         it("moves down when DOWN arrow key is pressed", async () => {
           act(() => {
-            resizeWindow(desktopWidth, desktopHeight);
+            resizeWindow(desktopDimensions);
           });
 
           const boundaryTestData = {
             data: {
               sandWorm: [
-                {
-                  key: 0,
-                  part: WormAnatomy.HEAD,
-                  location: { row: 7, column: 10 },
-                },
-                {
-                  key: 1,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 9 },
-                },
-                {
-                  key: 2,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 8 },
-                },
-                {
-                  key: 3,
-                  part: WormAnatomy.TAIL,
-                  location: { row: 7, column: 7 },
-                },
+                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
               ],
-              food: foodTestLocations,
+              food: [
+                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+              ],
               startDirection: Direction.RIGHT,
             },
           };
 
           render(
-            <MockGameProvider value={testContext}>
               <App {...boundaryTestData} />
-            </MockGameProvider>
           );
 
           // wait for sandworm to render
@@ -663,42 +609,29 @@ describe("Gameboard Rendering", () => {
 
         it("moves left when LEFT arrow key is pressed", async () => {
           act(() => {
-            resizeWindow(desktopWidth, desktopHeight);
+            resizeWindow(desktopDimensions);
           });
 
           const leftArrowTestData = {
             data: {
               sandWorm: [
-                {
-                  key: 0,
-                  part: WormAnatomy.HEAD,
-                  location: { row: 5, column: 9 },
-                },
-                {
-                  key: 1,
-                  part: WormAnatomy.BODY,
-                  location: { row: 6, column: 9 },
-                },
-                {
-                  key: 2,
-                  part: WormAnatomy.BODY,
-                  location: { row: 7, column: 9 },
-                },
-                {
-                  key: 3,
-                  part: WormAnatomy.TAIL,
-                  location: { row: 8, column: 9 },
-                },
+                { key: 0, part: WormAnatomy.HEAD, location: { row: 5, column: 9 } },
+                { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
+                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                { key: 3, part: WormAnatomy.TAIL, location: { row: 8, column: 9 } },
               ],
-              food: foodTestLocations,
+              food: [
+                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+              ],
               startDirection: Direction.UP,
             },
           };
 
           render(
-            <MockGameProvider value={testContext}>
               <App {...leftArrowTestData} />
-            </MockGameProvider>
           );
 
           // wait for sandworm to render
@@ -746,42 +679,29 @@ describe("Gameboard Rendering", () => {
                  THEN continue moving sandworm in current direction  */
 
                 act(() => {
-                  resizeWindow(desktopWidth, desktopHeight);
+                  resizeWindow(desktopDimensions);
                 });
 
                 const oppositeDirectionTest = {
                   data: {
                     sandWorm: [
-                      {
-                        key: 0,
-                        part: WormAnatomy.HEAD,
-                        location: { row: 7, column: 10 },
-                      },
-                      {
-                        key: 1,
-                        part: WormAnatomy.BODY,
-                        location: { row: 7, column: 9 },
-                      },
-                      {
-                        key: 2,
-                        part: WormAnatomy.BODY,
-                        location: { row: 7, column: 8 },
-                      },
-                      {
-                        key: 3,
-                        part: WormAnatomy.TAIL,
-                        location: { row: 7, column: 7 },
-                      },
+                      { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+                      { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                      { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+                      { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
                     ],
-                    food: foodTestLocations,
+                    food: [
+                      { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                      { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                      { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                      { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+                    ],
                     startDirection: Direction.RIGHT,
                   },
                 };
-        
+
                 render(
-                  <MockGameProvider value={testContext}>
                     <App {...oppositeDirectionTest} />
-                  </MockGameProvider>
                 );
         
                 // wait for sandworm to render
@@ -830,43 +750,30 @@ describe("Gameboard Rendering", () => {
                   THEN continue moving sandworm in current direction  */
 
                   act(() => {
-                    resizeWindow(desktopWidth, desktopHeight);
+                    resizeWindow(desktopDimensions);
                   });
   
                   const collideWithWallTest = {
                     data: {
                       sandWorm: [
-                        {
-                          key: 0,
-                          part: WormAnatomy.HEAD,
-                          location: { row: 14, column: 10 },
-                        },
-                        {
-                          key: 1,
-                          part: WormAnatomy.BODY,
-                          location: { row: 14, column: 9 },
-                        },
-                        {
-                          key: 2,
-                          part: WormAnatomy.BODY,
-                          location: { row: 14, column: 8 },
-                        },
-                        {
-                          key: 3,
-                          part: WormAnatomy.TAIL,
-                          location: { row: 14, column: 7 },
-                        },
+                        { key: 0, part: WormAnatomy.HEAD, location: { row: 14, column: 10 } },
+                        { key: 2, part: WormAnatomy.BODY, location: { row: 14, column: 8 } },
+                        { key: 1, part: WormAnatomy.BODY, location: { row: 14, column: 9 } },
+                        { key: 3, part: WormAnatomy.TAIL, location: { row: 14, column: 7 } },
                       ],
-                      food: foodTestLocations,
+                      food: [
+                        { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                        { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                        { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                        { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+                      ],
                       startDirection: Direction.RIGHT,
                     },
                   };
 
                   //ARRANGE
                   render(
-                    <MockGameProvider value={testContext}>
-                      <App {...collideWithWallTest} />
-                    </MockGameProvider>
+                    <App {...collideWithWallTest} />
                   );
           
                   // wait for sandworm to render
@@ -903,7 +810,7 @@ describe("Gameboard Rendering", () => {
       });
     });
 
-    describe('Food Interaction Effects', () => {
+    describe('Food Interaction Effects (Context Tests)', () => {
         test('the sandworm grows in length after eating food', async () => {
           /*  GIVEN the board renders,
               AND next move collides with food tile
@@ -912,75 +819,51 @@ describe("Gameboard Rendering", () => {
               AND increases body length by 1  */
 
               act(() => {
-                resizeWindow(desktopWidth, desktopHeight);
+                resizeWindow(desktopDimensions);
               });
 
-              const assertWormLength = 5; 
-
               let testLengthIncreaseContext = {
-                wormLength: 4,
-                speed: 300,
-                foodEaten: 0,
-                score: 0,
-                level: 1,
-                gameOver: false,
-                gameWon: false,
-                increaseFoodEaten: () => increaseFoodEatenTest(),
-                nextLevel: () => console.log("increase level"),
-                victoryDance: () => console.log("winner"),
-                oopsYouLost: () => console.log("loser"),
+                  wormLength: 4,
+                  speed: 300,
+                  foodEaten: 0,
+                  score: 0,
+                  level: 1,
+                  gameOver: false,
+                  gameWon: false,
+                  increaseFoodEaten: () => {
+                    testLengthIncreaseContext.foodEaten += 1;
+                    testLengthIncreaseContext.increaseWormLength();
+                    testLengthIncreaseContext.increaseScore();
+                    testLengthIncreaseContext.increaseSpeed();
+                  },
+                  increaseWormLength: () => {
+                    testLengthIncreaseContext.wormLength += 1;
+                  },
+                  increaseScore: () => {
+                    testLengthIncreaseContext.score += 100;
+                  },
+                  increaseSpeed: () => {
+                    testLengthIncreaseContext.speed -= 50;
+                  },
+                  nextLevel: () => console.log("increase level"),
+                  victoryDance: () => console.log("winner"),
+                  oopsYouLost: () => console.log("loser"),
               };
-
-              const increaseFoodEatenTest = () => testLengthIncreaseContext.wormLength += 1;
-
-              const foodTestLocations = [
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 7, column: 7 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 10, column: 10 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 12, column: 12 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 14, column: 14 },
-                }
-              ];
 
               const growInLengthTestData = {
                 data: {
                   sandWorm: [
-                    {
-                      key: 0,
-                      part: WormAnatomy.HEAD,
-                      location: { row: 7, column: 6 },
-                    },
-                    {
-                      key: 1,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 5 },
-                    },
-                    {
-                      key: 2,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 4 },
-                    },
-                    {
-                      key: 3,
-                      part: WormAnatomy.TAIL,
-                      location: { row: 7, column: 3 },
-                    },
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
                   ],
-                  food: foodTestLocations,
+                  food: [
+                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                  ],
                   startDirection: Direction.RIGHT,
                 },
               };
@@ -1018,8 +901,10 @@ describe("Gameboard Rendering", () => {
                 testLengthIncreaseContext.increaseFoodEaten();
               })
 
+              const assertWormLength = 5; 
+
               //assert game context is updated to increase body by 1 tile
-              await waitFor(() => {
+              await waitFor(() => {                
                 expect(testLengthIncreaseContext.wormLength).toEqual(assertWormLength);
               });
 
@@ -1034,7 +919,7 @@ describe("Gameboard Rendering", () => {
               });
         });
 
-        it('score increases after eating food', async() => {
+        test('the score increasing after eating food', async() => {
           /*  GIVEN the board renders,
               AND next move collides with food tile
               AND we wait for one move
@@ -1042,10 +927,8 @@ describe("Gameboard Rendering", () => {
               AND the score increases by 100 */
 
               act(() => {
-                resizeWindow(desktopWidth, desktopHeight);
+                resizeWindow(desktopDimensions);
               });
-
-              const assertScore = 100; 
 
               let testLengthIncreaseContext = {
                 wormLength: 4,
@@ -1073,67 +956,33 @@ describe("Gameboard Rendering", () => {
               const increaseScore = () => testLengthIncreaseContext.score += 100;
               const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
 
-              const foodTestLocations = [
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 7, column: 7 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 10, column: 10 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 12, column: 12 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 14, column: 14 },
-                }
-              ];
-
-              const growInLengthTestData = {
+              const increaseScoreTest = {
                 data: {
                   sandWorm: [
-                    {
-                      key: 0,
-                      part: WormAnatomy.HEAD,
-                      location: { row: 7, column: 6 },
-                    },
-                    {
-                      key: 1,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 5 },
-                    },
-                    {
-                      key: 2,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 4 },
-                    },
-                    {
-                      key: 3,
-                      part: WormAnatomy.TAIL,
-                      location: { row: 7, column: 3 },
-                    },
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
                   ],
-                  food: foodTestLocations,
+                  food: [
+                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                  ],
                   startDirection: Direction.RIGHT,
                 },
               };
 
               render(
                 <MockGameProvider value={testLengthIncreaseContext}>
-                  <App {...growInLengthTestData} />
+                  <App {...increaseScoreTest} />
                 </MockGameProvider>
               );
 
               // wait for sandworm to render
               await waitFor(() => {
-                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                increaseScoreTest.data.sandWorm.forEach((segment) => {
                   const { row, column } = segment.location;
                   const tile = screen.getByTestId(`tile-${row}-${column}`);
                   expect(tile).toHaveClass(
@@ -1149,7 +998,7 @@ describe("Gameboard Rendering", () => {
 
               //assert that head tile exists on a food coordinate
               await waitFor(() => {
-                const {row, column} = growInLengthTestData.data.food[0].location;
+                const {row, column} = increaseScoreTest.data.food[0].location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass('tile-texture--head');
               });
@@ -1160,6 +1009,7 @@ describe("Gameboard Rendering", () => {
 
               //assert game context is updated to increase body by 1 tile
               await waitFor(() => {
+                const assertScore = 100; 
                 expect(testLengthIncreaseContext.score).toEqual(assertScore);
               });
         });
@@ -1172,10 +1022,26 @@ describe("Gameboard Rendering", () => {
               AND the speed increases by 50ms */
 
               act(() => {
-                resizeWindow(desktopWidth, desktopHeight);
+                resizeWindow(desktopDimensions);
               });
 
-              const assertSpeed = 250; 
+              const increaseSpeedTest = {
+                data: {
+                  sandWorm: [
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                  ],
+                  food: [
+                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                  ],
+                  startDirection: Direction.RIGHT,
+                },
+              };
 
               let testLengthIncreaseContext = {
                 wormLength: 4,
@@ -1203,67 +1069,15 @@ describe("Gameboard Rendering", () => {
               const increaseScore = () => testLengthIncreaseContext.score += 100;
               const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
 
-              const foodTestLocations = [
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 7, column: 7 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 10, column: 10 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 12, column: 12 },
-                },
-                { 
-                  key: 1,
-                  variant: 'soulFood',
-                  location: {row: 14, column: 14 },
-                }
-              ];
-
-              const growInLengthTestData = {
-                data: {
-                  sandWorm: [
-                    {
-                      key: 0,
-                      part: WormAnatomy.HEAD,
-                      location: { row: 7, column: 6 },
-                    },
-                    {
-                      key: 1,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 5 },
-                    },
-                    {
-                      key: 2,
-                      part: WormAnatomy.BODY,
-                      location: { row: 7, column: 4 },
-                    },
-                    {
-                      key: 3,
-                      part: WormAnatomy.TAIL,
-                      location: { row: 7, column: 3 },
-                    },
-                  ],
-                  food: foodTestLocations,
-                  startDirection: Direction.RIGHT,
-                },
-              };
-
               render(
                 <MockGameProvider value={testLengthIncreaseContext}>
-                  <App {...growInLengthTestData} />
+                  <App {...increaseSpeedTest} />
                 </MockGameProvider>
               );
 
               // wait for sandworm to render
               await waitFor(() => {
-                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                increaseSpeedTest.data.sandWorm.forEach((segment) => {
                   const { row, column } = segment.location;
                   const tile = screen.getByTestId(`tile-${row}-${column}`);
                   expect(tile).toHaveClass(
@@ -1279,7 +1093,7 @@ describe("Gameboard Rendering", () => {
 
               //assert that head tile exists on a food coordinate
               await waitFor(() => {
-                const {row, column} = growInLengthTestData.data.food[0].location;
+                const {row, column} = increaseSpeedTest.data.food[0].location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass('tile-texture--head');
               });
@@ -1290,6 +1104,7 @@ describe("Gameboard Rendering", () => {
 
               //assert game context is updated to increase body by 1 tile
               await waitFor(() => {
+                const assertSpeed = 250; 
                 expect(testLengthIncreaseContext.speed).toEqual(assertSpeed);
               });
 

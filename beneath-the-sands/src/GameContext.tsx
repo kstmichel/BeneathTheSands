@@ -14,7 +14,7 @@ interface GameContextProps {
   oopsYouLost: () => void;
 }
 
-const GameContext = createContext<GameContextProps | undefined>(undefined);
+export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => { 
   const [wormLength, setWormLength] = useState(4);
@@ -54,49 +54,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         victoryDance,
         oopsYouLost
     }}>
-      {children}
-    </GameContext.Provider>
-  );
-};
-
-export const MockGameProvider: React.FC<{ children: ReactNode, value: GameContextProps }> = ({ children, value }) => {
-    const [wormLength, setWormLength] = useState(value.wormLength);
-    const [speed, setSpeed] = useState(value.speed);
-    const [foodEaten, setFoodEaten] = useState(value.foodEaten);
-    const [score, setScore] = useState(value.score);
-    const [level, setLevel] = useState(value.level);
-    const [gameOver, setGameOver] = useState(false);
-    const [gameWon, setGameWon] = useState(false);
-
-    const increaseFoodEaten = () => {
-      setFoodEaten((prevEaten) => prevEaten + 1);
-  
-      increaseWormLength();
-      increaseScore();
-      increaseSpeed();
-    }
-
-    const increaseWormLength = () => setWormLength(prevLength => prevLength + 1);
-    const increaseScore = () => setScore(prevScore => prevScore + 100);
-    const increaseSpeed = () => setSpeed(prevSpeed => prevSpeed - 50);
-    const nextLevel = () => setLevel(prevLevel => prevLevel + 1);
-    const victoryDance = () => setGameWon(true);
-    const oopsYouLost = () => setGameOver(true);
-    
-  return (
-    <GameContext.Provider value={{ 
-      score, 
-      level, 
-      wormLength, 
-      speed,
-      foodEaten, 
-      gameOver, 
-      gameWon, 
-      increaseFoodEaten,
-      nextLevel, 
-      victoryDance,
-      oopsYouLost
-  }}>
       {children}
     </GameContext.Provider>
   );
