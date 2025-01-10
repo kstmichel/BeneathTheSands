@@ -39,7 +39,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const isMobile = windowSize.width <= 768;
     const isTablet = windowSize.width <= 1024;
 
-    const [deviceSize, setDeviceType] = useState<Device | null>(null); //TODO: Can be removed after development
+    const [deviceSize, setDeviceType] = useState<Device | null>(null);
     const [timer, setTimer] = useState<number>(0);
 
     const [gameField, setGameField] = useState<GameField>({tileGrid: [], boardSize: {rows: 0, columns: 0}});
@@ -122,7 +122,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             throw new Error(`All next moves are invalid: ${nextMoveOptions}`);
         }
 
-        return validMoves[0]; // randomized valid direction
+        return validMoves[0];
     }, [gameField, wormDirection]);
 
     const determineSandwormNextMove: () => NextMove = useCallback(() => {
@@ -130,7 +130,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             const headCoordinates: GridCoordinates = sandWorm[0].location;
 
             if(inputDirection) {
-                 // Validate the input and set direction if valid, otherwise default to the current direction;
                 const nextMove: NextMove = getNextMove(headCoordinates, inputDirection);
 
                 if (validateNextMove(nextMove, gameField)){
@@ -138,7 +137,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 }
             }
 
-            // valid input wasn't found, check current worm direction and if invalid change direction
             const nextMoveByDefault: NextMove = getNextMove(headCoordinates, wormDirection);
 
             if (isBoundaryCollisionDetected(nextMoveByDefault, gameField)) {
@@ -147,7 +145,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 return getRandomValidNextMove(headCoordinates);
             }
 
-            return nextMoveByDefault; // default to current direction (no valid input or boundary collision)
+            return nextMoveByDefault;
 
         } catch (error) {
             throw new Error(`Error occurred setting sandworm direction: ${error}`);
@@ -179,7 +177,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                     increaseFoodEaten();
                 }
 
-                setWormDirection(newNextMove.direction); // head controls general direction of sandworm
+                setWormDirection(newNextMove.direction);
                 setWormPath(addNewDirectionToWormPath(newNextMove.direction, wormPath));
 
             } else {
@@ -195,7 +193,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
         setSandWorm(newSandwormLocation);
         renderSandWormMovement(newSandwormLocation);
-        setInputDirection(null); //reset input directions
+        setInputDirection(null);
 
     }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, determineSandwormNextMove]);
 
@@ -247,7 +245,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [createGameBoardGrid, wormLength, wormDirection]);
 
-    // Add listener for Arrow keys input
     const handleKeyDown = (event: KeyboardEvent) => {
         switch (event.key) {
             case 'ArrowUp':
@@ -268,7 +265,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     // Initialize Gameboard Component
     useEffect(() => {
         const initializeGame = async () => {
-            // Initialize the grid based on the Device size
+
             const deviceType: Device = isMobile 
                 ? Device.Mobile 
                 : isTablet 
@@ -277,7 +274,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
             setDeviceType(deviceType);
 
-            // initial render has occurred
             if (initialRef.current) {
                 initialRef.current = false;
 
@@ -286,7 +282,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
             window.addEventListener('keydown', handleKeyDown);
             
-            // Update size on window resize
             const handleResize = () => getTileSize(window, deviceType);
             window.addEventListener("resize", handleResize);
 
@@ -325,10 +320,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const addWormSegment = useCallback(async() => {
         let growSandWormData = [...sandWorm];
         const tailIndex: number = growSandWormData.length - 1;
-        const newBody = {...growSandWormData[tailIndex]}; //copy tail segment's location
+        const newBody = {...growSandWormData[tailIndex]};
         newBody.part = WormAnatomy.BODY;
 
-        growSandWormData.splice(tailIndex, 0, newBody); // add new body segment to sandworm segment array
+        growSandWormData.splice(tailIndex, 0, newBody);
 
         // update key and location for each sandworm segment
         growSandWormData = growSandWormData.map((segment, index) => {
@@ -353,7 +348,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         setSandWorm([...growSandWormData]);
     }, [sandWorm, wormPath, wormLength]);
 
-    // Increase sandworm length when context worm length increases
     useEffect(() => {
         if (sandWorm.length < wormLength) {
             const increaseSandWormLength = async() => {
@@ -365,7 +359,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
        
     }, [wormLength, sandWorm, addWormSegment])
 
-    //Extend worm path when sandworm length increases
     useEffect(() => {
         if (wormPath.length > 0 && wormPath.length < sandWorm.length) {
             const newWormPath = extendWormPath(wormLength, wormPath);
