@@ -42,6 +42,23 @@ export interface GameField {
     boardSize: Dimension
 }
 
+export interface WindowConstraint {
+    maxWidth: number,
+}
+
+export interface WindowSize {
+    width: number,
+    height: number
+}
+
+const maxMobileWidth = 768;
+const maxTabletWidth = 1024;
+
+export const DeviceConstraints = {
+    mobile: maxMobileWidth, 
+    tablet: maxTabletWidth
+} 
+
 export const GameDimensions: Record<Device, Dimension> = {
     [Device.Mobile]: {
         rows: 10,

@@ -1,4 +1,18 @@
-import { GameGrid, GameDimensions, Device, Dimension, Direction, NextMove, GridCoordinates, Tile, GroundTexture, WormSegment} from './definitions';
+import { DeviceConstraints, WindowSize, GameGrid, GameDimensions, Device, Dimension, Direction, NextMove, GridCoordinates, Tile, GroundTexture, WormSegment} from './definitions';
+
+export const getDeviceType = (windowSize: WindowSize): Device => {
+    if(!windowSize || windowSize.width === 0) throw new Error('Issue occurred while determining device type. Window size was invalid.');
+
+    const isMobile = windowSize.width <= DeviceConstraints.mobile;
+    const isTablet = windowSize.width <= DeviceConstraints.tablet;
+
+    return isMobile 
+                ? Device.Mobile 
+                : isTablet 
+                ? Device.Tablet 
+                : Device.Desktop;
+
+};
 
 export const getGridArray = (dimensions: Dimension): GameGrid => {
     if(!dimensions.rows || dimensions.rows === 0 || !dimensions.columns || dimensions.columns === 0 ) {
@@ -158,6 +172,6 @@ export const getTileSize = (window: Window, deviceType: Device): number => {
 
 export const getTotalTiles = (dimensions: Dimension): number => {
     if(!dimensions) throw new Error('Cannot calculate total tiles. Missing dimensions.');
-    
+
     return dimensions.rows * dimensions.columns;
 }

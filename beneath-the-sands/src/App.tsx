@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { GameProvider } from './GameContext';
 import { GameBoard } from './components';
-import { WormSegment, Food, Direction } from './library/definitions';
+import { WindowSize, WormSegment, Food, Direction } from './library/definitions';
 
 interface AppProps {
   data: {
@@ -22,7 +22,7 @@ function App({data}: AppProps) {
     throw new Error('game element data not found during rendering');
   }
 
-  const [windowSize, setWindowSize] = useState({
+  const [windowSize, setWindowSize] = useState<WindowSize>({
     width: window.innerWidth,
     height: window.innerHeight,
   });
@@ -32,7 +32,7 @@ function App({data}: AppProps) {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
-      });
+      } as WindowSize);
     };
 
     window.addEventListener('resize', handleResize);

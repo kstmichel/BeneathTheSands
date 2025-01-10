@@ -3,11 +3,12 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
+import { WindowSize, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
 import { validateNextMove, filterValidPossibleMoves, isBoundaryCollisionDetected} from '../../library/validation';
 import { 
     setupWormPath, 
     extendWormPath, 
+    getDeviceType,
     getGridArray,
     getTotalTiles,
     getTileSize,
@@ -15,15 +16,12 @@ import {
     addNewDirectionToWormPath, 
     getDirectionByWormPath, 
     getRandomizedPossibleDirections,
-    getNextMove 
+    getNextMove, 
 } from '../../library/utils';
 import { useGameContext } from '../../GameContext';
 
 interface GameBoardProps {
-    windowSize: {
-        width: number;
-        height: number;
-    },
+    windowSize: WindowSize,
     gameData: {
         sandWorm: WormSegment[],
         food: Food[],
@@ -35,9 +33,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const initialRef = useRef(true);
 
     const { wormLength, level, speed, score, foodEaten, gameOver, gameWon, increaseFoodEaten } = useGameContext();
-
-    const isMobile = windowSize.width <= 768;
-    const isTablet = windowSize.width <= 1024;
 
     const [deviceSize, setDeviceType] = useState<Device | null>(null);
     const [timer, setTimer] = useState<number>(0);
@@ -266,11 +261,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     useEffect(() => {
         const initializeGame = async () => {
 
-            const deviceType: Device = isMobile 
-                ? Device.Mobile 
-                : isTablet 
-                ? Device.Tablet 
-                : Device.Desktop;
+            const deviceType: Device = getDeviceType(windowSize);
 
             setDeviceType(deviceType);
 
@@ -293,7 +284,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
         initializeGame();
 
-    }, [isMobile, isTablet, initGameBoardGrid]);
+    }, [windowSize, initGameBoardGrid]);
 
     // Sandworm Speed
     useEffect(() => {
