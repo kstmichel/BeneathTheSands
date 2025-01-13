@@ -3,21 +3,12 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { WindowSize, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
-import { validateNextMove, filterValidPossibleMoves, isBoundaryCollisionDetected} from '../../library/validation';
-import { 
-    setupWormPath, 
-    extendWormPath, 
-    getDeviceType,
-    getGridArray,
-    getTotalTiles,
-    getTileSize,
-    getOppositeDirection, 
-    addNewDirectionToWormPath, 
-    getDirectionByWormPath, 
-    getRandomizedPossibleDirections,
-    getNextMove, 
-} from '../../library/utils';
+import { WindowSize, GameData, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
+import { getDeviceType } from '../../library/utils';
+import { getGridArray, getTotalTiles, calculateTileSize, getRandomTileByType, addDropItemToBoard } from '../../library/gameGrid';
+import { getNextMove, getOppositeDirection, getRandomizedNextMove } from '../../library/movement';
+import { setupWormPath, extendWormPath, addNewDirectionToWormPath, getDirectionByWormPath } from '../../library/navigation';
+import { validateNextMove, isBoundaryCollisionDetected } from '../../library/validation';
 import { useGameContext } from '../../GameContext';
 
 interface GameBoardProps {
@@ -97,24 +88,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [gameField, wormPath]);
 
-    const getRandomValidNextMove = useCallback((coordinates: GridCoordinates): NextMove => {
-        const directionOptions: Direction[] = getRandomizedPossibleDirections(wormDirection); 
-        let nextMoveOptions: NextMove[] = [];
-
-        directionOptions.forEach((direction: Direction) => {
-            const nextMove: NextMove = getNextMove(coordinates, direction);
-            nextMoveOptions.push(nextMove);
-        });
-
-        const validMoves: NextMove[] = filterValidPossibleMoves(nextMoveOptions, gameField);
-
-        if(validMoves.length === 0) {
-            throw new Error(`All next moves are invalid: ${nextMoveOptions}`);
-        }
-
-        return validMoves[0];
-    }, [gameField, wormDirection]);
-
     const determineSandwormNextMove: () => NextMove = useCallback(() => {
         try{
             const headCoordinates: GridCoordinates = sandWorm[0].location;
@@ -132,7 +105,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             if (isBoundaryCollisionDetected(nextMoveByDefault, gameField)) {
                 // Sandworm hit the boundary, move it in a random direction to keep things spicy!
                 // TODO: increase difficulty as levels progress where hitting boundary means user loses the game
-                return getRandomValidNextMove(headCoordinates);
+                return getRandomizedNextMove(gameField, headCoordinates, wormDirection);
             }
 
             return nextMoveByDefault;
@@ -140,7 +113,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         } catch (error) {
             throw new Error(`Error occurred setting sandworm direction: ${error}`);
         }
-    }, [inputDirection, wormDirection, sandWorm, gameField, getRandomValidNextMove]);
+    }, [inputDirection, wormDirection, sandWorm, gameField]);
 
     const moveSandWorm = useCallback(async () => {
         if (!sandWorm || sandWorm.length === 0) {
@@ -268,7 +241,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
             window.addEventListener('keydown', handleKeyDown);
             
-            const handleResize = () => getTileSize(window, deviceType);
+            const handleResize = () => calculateTileSize(window, deviceType);
             window.addEventListener("resize", handleResize);
 
             return () => {

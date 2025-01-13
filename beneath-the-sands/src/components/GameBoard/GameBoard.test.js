@@ -69,7 +69,7 @@ afterEach(() => {
 });
 
 
-const testContext = {
+const baseContext = {
   wormLength: 2,
   speed: 300,
   foodEaten: 0,
@@ -86,6 +86,41 @@ const testContext = {
   oopsYouLost: () => console.log("loser"),
 };
 
+const baseWormLocation = [
+  { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+  { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+  { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+  { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+];
+
+const baseSandwormData = {
+  startDirection: Direction.RIGHT,
+  segments: baseWormLocation
+}
+
+const baseFoodData = [
+  { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+  { key: 1, variant: 'soulFood', location: {row: 5, column: 5 }},
+  { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+  { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+];
+
+const baseGameData = {
+  sandWorm: baseSandwormData,
+  food: baseFoodData
+}
+
+const baseLevel = {
+  drops: {
+      food: 10,
+      coins: 5,
+      rubies: 1
+  }
+};
+
+const baseContextData = {
+  levels: [baseLevel, baseLevel, baseLevel]
+};
 
 // Rendering
 describe("Gameboard Rendering", () => {
@@ -95,25 +130,18 @@ describe("Gameboard Rendering", () => {
         resizeWindow(desktopDimensions);
       });
 
-      const testWormData = {
+      const appData = {
         data: {
-          sandWorm: [
-            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-          ],
-          food: [
-            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-          ],
-          startDirection: Direction.RIGHT,
-        },
+          game: baseGameData,
+          context: baseContextData
+        }
       };
 
-      render(<App {...testWormData} />);
+      render(
+        <MockGameProvider data={appData.context} value={baseContext}>
+          <App {...appData} />
+        </MockGameProvider>      
+      );
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
@@ -128,26 +156,18 @@ describe("Gameboard Rendering", () => {
         resizeWindow(tabletDimensions);
       });
 
-      const testWormData = {
+      const appData = {
         data: {
-          sandWorm: [
-            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-          ],
-          food: [
-            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-          ],
-          startDirection: Direction.RIGHT,
-        },
+          game: baseGameData,
+          context: baseContextData
+        }
       };
 
-      render(<App {...testWormData} />);
-
+      render(
+        <MockGameProvider data={appData.context} value={baseContext}>
+          <App {...appData} />
+        </MockGameProvider>      
+      );
       await waitFor(() => {
         const tabletTiles = screen.getAllByTitle("grid-tile");
         const totalTiles = GameDimensions[Device.Tablet].rows * GameDimensions[Device.Tablet].columns;
@@ -161,25 +181,18 @@ describe("Gameboard Rendering", () => {
         resizeWindow(mobileDimensions);
       });
 
-      const testWormData = {
+      const appData = {
         data: {
-          sandWorm: [
-            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-          ],
-          food: [
-            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-          ],
-          startDirection: Direction.RIGHT,
-        },
+          game: baseGameData,
+          context: baseContextData
+        }
       };
 
-      render(<App {...testWormData} />);
+      render(
+        <MockGameProvider data={appData.context} value={baseContext}>
+          <App {...appData} />
+        </MockGameProvider>      
+      );
 
       await waitFor(() => {
         const tiles = screen.getAllByTitle("grid-tile");
@@ -191,72 +204,81 @@ describe("Gameboard Rendering", () => {
 
   describe("Renders board elements correctly", () => {
     it("renders initial Sandworm location", async () => {
-      act(() => {
-        resizeWindow(desktopDimensions);
-      });
-
-      const testWormData = {
-        data: {
-          sandWorm: [
-            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-          ],
-          food: [
-            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-          ],
-          startDirection: Direction.RIGHT,
-        },
-      };
-
-      render(<App {...testWormData} />);
-
-      await waitFor(() => {
-        testWormData.data.sandWorm.forEach((segment) => {
-          const { row, column } = segment.location;
-          const tile = screen.getByTestId(`tile-${row}-${column}`);
-          expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+        act(() => {
+          resizeWindow(desktopDimensions);
         });
-      });
+
+        const renderInitialWormData = {
+          data: {
+            game: {
+              ...baseGameData,
+              sandWorm: {
+                startDirection: Direction.RIGHT,
+                segments: [
+                  { key: 0, part: WormAnatomy.HEAD, location: { row: 6, column: 10 } },
+                  { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
+                  { key: 2, part: WormAnatomy.BODY, location: { row: 6, column: 8 } },
+                  { key: 3, part: WormAnatomy.TAIL, location: { row: 6, column: 7 } },
+                ]
+              }
+            },
+            context: baseContextData
+          }
+        };
+
+        const {sandWorm} = renderInitialWormData.data.game;
+
+        render(
+          <MockGameProvider data={renderInitialWormData.context} value={baseContext}>
+            <App {...renderInitialWormData} />
+          </MockGameProvider>      
+        );
+
+        await waitFor(() => {
+          sandWorm.segments.forEach((segment) => {
+            const { row, column } = segment.location;
+            const tile = screen.getByTestId(`tile-${row}-${column}`);
+            expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+          });
+        });
     });
 
     it("renders initial food locations", async () => {
-      act(() => {
-        resizeWindow(desktopDimensions);
-      });
-
-      const testWormData = {
-        data: {
-          sandWorm: [
-            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-          ],
-          food: [
-            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-            { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-            { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-          ],
-          startDirection: Direction.RIGHT,
-        },
-      };
-
-      render(<App {...testWormData} />);
-
-      await waitFor(() => {
-        testWormData.data.food.forEach((food) => {
-          const { row, column } = food.location;
-
-          const tile = screen.getByTestId(`tile-${row}-${column}`);
-          expect(tile).toHaveClass(`tile-texture--food`);
+        act(() => {
+          resizeWindow(desktopDimensions);
         });
-      });
+
+        const renderInitialFoodData = {
+          data: {
+            game: {
+              ...baseGameData,
+              food: [
+                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
+                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
+                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+              ],
+            },
+            context: baseContextData
+          }
+        };
+
+        const { food } = renderInitialFoodData.data.game;
+
+        render(
+          <MockGameProvider data={renderInitialFoodData.context} value={baseContext}>
+            <App {...renderInitialFoodData} />
+          </MockGameProvider>      
+        );
+
+        await waitFor(() => {
+          food.forEach((item) => {
+            const { row, column } = item.location;
+
+            const tile = screen.getByTestId(`tile-${row}-${column}`);
+            expect(tile).toHaveClass(`tile-texture--food`);
+          });
+        });
     });
   });
 
@@ -266,7 +288,6 @@ describe("Gameboard Rendering", () => {
     describe("Default Behavior (No Input)", () => {
       // Default Behavior Tests
 
-      // TODO: add initial worm direction to the game context and use in this test
       it("continues to move in current direction", async () => {
         /*  GIVEN the board renders, 
             WHEN no input is detected, 
@@ -279,64 +300,60 @@ describe("Gameboard Rendering", () => {
           resizeWindow(desktopDimensions);
         });
 
-        const testWormData = {
+        const continueDirectionData = {
           data: {
-            sandWorm: [
-              { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-              { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-              { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-              { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-            ],
-            food: [
-              { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-              { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-              { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-              { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-            ],
-            startDirection: Direction.RIGHT,
-          },
+            game: {
+              ...baseGameData,
+              sandWorm: {
+                startDirection: Direction.RIGHT,
+                segments: [
+                  { key: 0, part: WormAnatomy.HEAD, location: { row: 8, column: 10 } },
+                  { key: 1, part: WormAnatomy.BODY, location: { row: 8, column: 9 } },
+                  { key: 2, part: WormAnatomy.BODY, location: { row: 8, column: 8 } },
+                  { key: 3, part: WormAnatomy.TAIL, location: { row: 8, column: 7 } },
+                ]
+              }
+            },
+            context: baseContextData
+          }
         };
-  
-        render(<App {...testWormData} />);
 
-        // set initial sandworm head column position
-        let nextColumn = testWormData.data.sandWorm[0].location.column;
+        const {sandWorm} = continueDirectionData.data.game;
+
+        render(
+          <MockGameProvider data={continueDirectionData.context} value={baseContext}>
+            <App {...continueDirectionData} />
+          </MockGameProvider>      
+        );
 
         // wait for sandworm to render
         await waitFor(() => {
-          testWormData.data.sandWorm.forEach((segment) => {
+          sandWorm.segments.forEach((segment) => {
             const { row, column } = segment.location;
             const tile = screen.getByTestId(`tile-${row}-${column}`);
-            expect(tile).toHaveClass(
-              `tile-texture--${segment.part.toLowerCase()}`
-            );
+            expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
           });
-
-          nextColumn += 1; // sandworm was rendered, bump column for next check
         });
 
         // wait one sandworm move
         act(() => {
-          jest.advanceTimersByTime(testContext.speed);
+          jest.advanceTimersByTime(baseContext.speed);
         });
 
         await waitFor(
           () => {
-            // wait for sandworm to move
-
-            testWormData.data.sandWorm.forEach((segment) => {
-              const tile = screen.getByTestId(
-                `tile-${segment.location.row}-${nextColumn}`
-              );
-              expect(tile).toHaveClass(
-                `tile-texture--${segment.part.toLowerCase()}`
-              );
-
-              nextColumn -= 1; //as we check the sandworm segments move back one column
+            const assertMoveCoordinates = [
+              { row: 8, column: 11 },
+              { row: 8, column: 10 },
+              { row: 8, column: 9 },
+              { row: 8, column: 8 },
+            ]
+            sandWorm.segments.forEach((segment, index) => {
+              const {row, column} = assertMoveCoordinates[index];
+              const tile = screen.getByTestId(`tile-${row}-${column}`);
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
-          },
-          { timeout: 500 }
-        );
+          }, { timeout: 500 });
       });
 
       it("changes direction when it hits a boundary", async () => {
@@ -355,79 +372,81 @@ describe("Gameboard Rendering", () => {
 
         const boundaryTestData = {
           data: {
-            sandWorm: [
-              { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-              { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-              { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-              { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-            ],
-            food: [
-              { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-              { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-              { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-              { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-            ],
-            startDirection: Direction.RIGHT,
-          },
+            game: baseGameData,
+            context: baseContextData
+          }
         };
 
-        let sandwormApproachingBoundary = boundaryTestData.data.sandWorm.map(
+        // move sandworm location to right before right boundary
+        let sandwormApproachingBoundary = boundaryTestData.data.game.sandWorm.segments.map(
           (segment) => {
             let updatedSegment = { ...segment };
-            updatedSegment.location.column = maxColumn - 1; // set to last column to the right
-            maxColumn -= 1; // decrease by one as we update segment locations
+            updatedSegment.location.column = maxColumn - 1; 
+            maxColumn -= 1;
 
             return updatedSegment;
           }
         );
 
+        const updatedGameData = {
+          ...boundaryTestData.data.game,
+          sandworm: {
+            ...boundaryTestData.data.game.sandWorm,
+            location: sandwormApproachingBoundary
+          } 
+        }
+
         const testWormHitBoundaryData = {
-          ...boundaryTestData,
-          sandWorm: sandwormApproachingBoundary,
+          data: {
+            ...boundaryTestData.data,
+            game: updatedGameData
+          }
         };
 
-        let testCoordinates = { ...sandwormApproachingBoundary[0].location }; // initialize test coordinates
+        const {sandWorm} = testWormHitBoundaryData.data.game;
+        let testHeadCoordinates = sandwormApproachingBoundary[0].location; // initialize test coordinates
 
-        render(<App {...boundaryTestData} />);
+        render(
+          <MockGameProvider data={boundaryTestData.context} value={baseContext}>
+            <App {...boundaryTestData} />
+          </MockGameProvider>      
+        );
 
         // wait for sandworm to render
         await waitFor(() => {
-          testWormHitBoundaryData.data.sandWorm.forEach((segment) => {
+          sandWorm.segments.forEach((segment) => {
             const { row, column } = segment.location;
             const tile = screen.getByTestId(`tile-${row}-${column}`);
-            expect(tile).toHaveClass(
-              `tile-texture--${segment.part.toLowerCase()}`
-            );
+            expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
           });
         });
 
         // wait one sandworm move
         act(() => {
-          jest.advanceTimersByTime(testContext.speed);
+          jest.advanceTimersByTime(baseContext.speed);
         });
 
-        const head = { ...testWormHitBoundaryData.data.sandWorm[0] };
+        // determine which way the sandworm went (up or down)
+        const headRow = sandWorm.segments[0].row;
         const testTileUp = 6;
         const testTileDown = 8;
 
-        if (head.location.row > testCoordinates.row) {
-          testCoordinates = { ...testCoordinates, row: testTileDown };
-        } else if (head.location.row < testCoordinates.row) {
-          testCoordinates = { ...testCoordinates, row: testTileUp };
+        if (headRow > testHeadCoordinates.row) {
+          testHeadCoordinates = { ...testHeadCoordinates, row: testTileDown };
+        } else if (headRow < testHeadCoordinates.row) {
+          testHeadCoordinates = { ...testHeadCoordinates, row: testTileUp };
         }
 
         await waitFor(() => {
           // check that sandworm moved accurately based on direction
-          testWormHitBoundaryData.data.sandWorm.forEach((segment) => {
-            if (segment.part !== "head") {
-              // the rest of the segments just move once to the right
-              testCoordinates = { ...segment.location };
+          sandWorm.segments.forEach((segment) => {
+            let assertCoordinates = {...segment.location};
+
+            if (segment.part === "head") {
+              assertCoordinates = testHeadCoordinates;
             }
 
-            const tile = screen.getByTestId(
-              `tile-${testCoordinates.row}-${testCoordinates.column}`
-            );
-
+            const tile = screen.getByTestId(`tile-${assertCoordinates.row}-${assertCoordinates.column}`);
             expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
           });
         });
@@ -443,43 +462,55 @@ describe("Gameboard Rendering", () => {
 
           const boundaryTestData = {
             data: {
-              sandWorm: [
-                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-              ],
-              food: [
-                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-              ],
-              startDirection: Direction.RIGHT,
-            },
+              game: {
+                ...baseGameData,
+                sandWorm: {
+                  startDirection: Direction.RIGHT,
+                  segments: [
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 6, column: 10 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 6, column: 8 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 6, column: 7 } },
+                  ]
+                }
+              },
+              context: baseContextData
+            }
           };
-
+  
+          const {sandWorm} = boundaryTestData.data.game;
+  
           render(
+            <MockGameProvider data={boundaryTestData.context} value={baseContext}>
               <App {...boundaryTestData} />
+            </MockGameProvider>      
           );
-
+  
           // wait for sandworm to render
           await waitFor(() => {
-            boundaryTestData.data.sandWorm.forEach((segment) => {
+            sandWorm.segments.forEach((segment) => {
               const { row, column } = segment.location;
               const tile = screen.getByTestId(`tile-${row}-${column}`);
-              expect(tile).toHaveClass(
-                `tile-texture--${segment.part.toLowerCase()}`
-              );
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
-          }, 1000);
+          });
 
           // press up arrow key
           fireEvent.keyDown(window, { key: "ArrowUp", code: "ArrowUp" });
 
           await waitFor(() => {
-            const headTile = screen.getByTestId("tile-6-10");
-            expect(headTile).toHaveClass("tile-texture--head");
+            const assertSandwormLocation = [
+              { row: 5, column: 10 },
+              { row: 6, column: 10 },
+              { row: 6, column: 9 },
+              { row: 6, column: 8 },
+            ];
+  
+            sandWorm.segments.forEach((segment, index) => {
+              const {row, column} = assertSandwormLocation[index];
+              const tile = screen.getByTestId(`tile-${row}-${column}`);
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+            })
           });
         });
 
@@ -490,121 +521,116 @@ describe("Gameboard Rendering", () => {
 
           const gameTestDataMoveRight = {
             data: {
-              sandWorm: [
-                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-              ],
-              food: [
-                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-              ],
-              startDirection: Direction.RIGHT,
-            },
+              game: {
+                ...baseGameData,
+                sandWorm: {
+                  startDirection: Direction.UP,
+                  segments: [
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 4, column: 6 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 5, column: 6 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 6, column: 6 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 6 } },
+                  ]
+                }
+              },
+              context: baseContextData
+            }
           };
 
-          render(
-              <App {...gameTestDataMoveRight} />
-          );
+        const {sandWorm} = gameTestDataMoveRight.data.game;
 
+        render(
+          <MockGameProvider data={gameTestDataMoveRight.context} value={baseContext}>
+            <App {...gameTestDataMoveRight} />
+          </MockGameProvider>      
+        );
+        
           // wait for sandworm to render
           await waitFor(() => {
-            gameTestDataMoveRight.data.sandWorm.forEach((segment) => {
+            sandWorm.segments.forEach((segment) => {
               const { row, column } = segment.location;
               const tile = screen.getByTestId(`tile-${row}-${column}`);
               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
-          }, 1000);
+          });
 
           // press up arrow key
           fireEvent.keyDown(window, { key: "ArrowRight", code: "ArrowRight" });
-
-          // wait one sandworm move
-          act(() => {
-            jest.advanceTimersByTime(testContext.speed * 2);
-          });
           
           await waitFor(() => {
             const testSegmentValidLocation = [
-              { row: 7, column: 12 },
-              { row: 7, column: 11 },
-              { row: 7, column: 10 },
-              { row: 7, column: 9 }
+              { row: 4, column: 7 },
+              { row: 4, column: 6 },
+              { row: 5, column: 6 },
+              { row: 6, column: 6 }
             ];
 
-            gameTestDataMoveRight.data.sandWorm.forEach((segment, index) => {
-                const {row, column} = testSegmentValidLocation[index];
-                const tile = screen.getByTestId(`tile-${row}-${column}`);
-
-                expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
-            });
+            sandWorm.segments.forEach((segment, index) => {
+              const {row, column} = testSegmentValidLocation[index];
+              const tile = screen.getByTestId(`tile-${row}-${column}`);
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+            })
           });
         });
 
         it("moves down when DOWN arrow key is pressed", async () => {
-          act(() => {
-            resizeWindow(desktopDimensions);
-          });
-
-          const boundaryTestData = {
-            data: {
-              sandWorm: [
-                { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-                { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-                { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-              ],
-              food: [
-                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-              ],
-              startDirection: Direction.RIGHT,
-            },
-          };
-
-          render(
-              <App {...boundaryTestData} />
-          );
-
-          // wait for sandworm to render
-          await waitFor(() => {
-            boundaryTestData.data.sandWorm.forEach((segment) => {
-              const { row, column } = segment.location;
-              const tile = screen.getByTestId(`tile-${row}-${column}`);
-              expect(tile).toHaveClass(
-                `tile-texture--${segment.part.toLowerCase()}`
-              );
+            act(() => {
+              resizeWindow(desktopDimensions);
             });
-          }, 1000);
 
-          // press up arrow key
-          fireEvent.keyDown(window, { key: "ArrowDown", code: "ArrowDown" });
+            const gameTestDataMoveDown = {
+              data: {
+                game: {
+                  ...baseGameData,
+                  sandWorm: {
+                    startDirection: Direction.RIGHT,
+                    segments: [
+                      { key: 0, part: WormAnatomy.HEAD, location: { row: 6, column: 10 } },
+                      { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
+                      { key: 2, part: WormAnatomy.BODY, location: { row: 6, column: 8 } },
+                      { key: 3, part: WormAnatomy.TAIL, location: { row: 6, column: 7 } },
+                    ]
+                  }
+                },
+                context: baseContextData
+              }
+            };
+    
+            const {sandWorm} = gameTestDataMoveDown.data.game;
+    
+            render(
+              <MockGameProvider data={gameTestDataMoveDown.context} value={baseContext}>
+                <App {...gameTestDataMoveDown} />
+              </MockGameProvider>      
+            );
 
-           // wait one sandworm move
-           act(() => {
-            jest.advanceTimersByTime(testContext.speed * 1);
-          });
-
-          await waitFor(() => {
-            const testSegmentValidLocation = [
-              { row: 9, column: 10 },
-              { row: 8, column: 10 },
-              { row: 7, column: 10 },
-              { row: 7, column: 9 }
-            ];
-
-            boundaryTestData.data.sandWorm.forEach((segment, index) => {
-                const {row, column} = testSegmentValidLocation[index];
+            // wait for sandworm to render
+            await waitFor(() => {
+              sandWorm.segments.forEach((segment) => {
+                const { row, column } = segment.location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
-
                 expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+              });
             });
-          });
+
+            // press up arrow key
+            fireEvent.keyDown(window, { key: "ArrowDown", code: "ArrowDown" });
+
+            await waitFor(() => {
+              const testSegmentValidLocation = [
+                { row: 7, column: 10 },
+                { row: 6, column: 10 },
+                { row: 6, column: 9 },
+                { row: 6, column: 8 }
+              ];
+
+              sandWorm.segments.forEach((segment, index) => {
+                  const {row, column} = testSegmentValidLocation[index];
+                  const tile = screen.getByTestId(`tile-${row}-${column}`);
+
+                  expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+              });
+            });
         });
 
         it("moves left when LEFT arrow key is pressed", async () => {
@@ -614,44 +640,41 @@ describe("Gameboard Rendering", () => {
 
           const leftArrowTestData = {
             data: {
-              sandWorm: [
-                { key: 0, part: WormAnatomy.HEAD, location: { row: 5, column: 9 } },
-                { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
-                { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-                { key: 3, part: WormAnatomy.TAIL, location: { row: 8, column: 9 } },
-              ],
-              food: [
-                { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-              ],
-              startDirection: Direction.UP,
-            },
+              game: {
+                ...baseGameData,
+                sandWorm: {
+                  startDirection: Direction.UP,
+                  segments: [
+                    { key: 0, part: WormAnatomy.HEAD, location: { row: 5, column: 9 } },
+                    { key: 1, part: WormAnatomy.BODY, location: { row: 6, column: 9 } },
+                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+                    { key: 3, part: WormAnatomy.TAIL, location: { row: 8, column: 9 } },
+                  ]
+                },
+              },
+              context: baseContextData
+            }
           };
 
-          render(
-              <App {...leftArrowTestData} />
-          );
+        const {sandWorm} = leftArrowTestData.data.game;
+
+        render(
+          <MockGameProvider data={leftArrowTestData.context} value={baseContext}>
+            <App {...leftArrowTestData} />
+          </MockGameProvider>      
+        );
 
           // wait for sandworm to render
           await waitFor(() => {
-            leftArrowTestData.data.sandWorm.forEach((segment) => {
+            sandWorm.segments.forEach((segment) => {
               const { row, column } = segment.location;
               const tile = screen.getByTestId(`tile-${row}-${column}`);
-              expect(tile).toHaveClass(
-                `tile-texture--${segment.part.toLowerCase()}`
-              );
+              expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
             });
-          }, 1000);
+          });
 
           // press up arrow key
           fireEvent.keyDown(window, { key: "ArrowLeft", code: "ArrowLeft" });
-
-          // wait one sandworm move
-          act(() => {
-            jest.advanceTimersByTime(testContext.speed * 1);
-          });
           
           await waitFor(() => {
             const testSegmentValidLocation = [
@@ -661,7 +684,7 @@ describe("Gameboard Rendering", () => {
               { row: 7, column: 9 }
             ];
 
-            leftArrowTestData.data.sandWorm.forEach((segment, index) => {
+            sandWorm.segments.forEach((segment, index) => {
                 const {row, column} = testSegmentValidLocation[index];
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
 ;               expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
@@ -682,65 +705,71 @@ describe("Gameboard Rendering", () => {
                   resizeWindow(desktopDimensions);
                 });
 
-                const oppositeDirectionTest = {
+                const reverseDirectionData = {
                   data: {
-                    sandWorm: [
-                      { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
-                      { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
-                      { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
-                      { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
-                    ],
-                    food: [
-                      { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                      { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                      { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                      { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-                    ],
-                    startDirection: Direction.RIGHT,
-                  },
+                    game: {
+                      ...baseGameData,
+                      sandWorm: {
+                        startDirection: Direction.RIGHT,
+                        segments: [
+                          { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                          { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                          { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                          { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                        ]
+                      },
+                    },
+                    context: baseContextData
+                  }
                 };
 
+                const {sandWorm} = reverseDirectionData.data.game;
+                const assertNotReversed = {row: 7, column: 5}
+        
                 render(
-                    <App {...oppositeDirectionTest} />
+                  <MockGameProvider data={reverseDirectionData.context} value={baseContext}>
+                    <App {...reverseDirectionData} />
+                  </MockGameProvider>      
                 );
         
                 // wait for sandworm to render
                 await waitFor(() => {
-                  oppositeDirectionTest.data.sandWorm.forEach((segment) => {
+                  sandWorm.segments.forEach((segment) => {
                     const { row, column } = segment.location;
                     const tile = screen.getByTestId(`tile-${row}-${column}`);
-                    expect(tile).toHaveClass(
-                      `tile-texture--${segment.part.toLowerCase()}`
-                    );
+                    expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
                   });
-                }, 1000);
+                });
         
-                // press left arrow key
                 fireEvent.keyDown(window, { key: "ArrowLeft", code: "ArrowLeft" });
         
-                // ASSERT (invalid) The sandworm head did not turn left on top of it's own body
-                await waitFor(() => {
-                  const headTile = screen.getByTestId("tile-7-9");
+                act(() => {
+                  jest.advanceTimersByTime(baseContext.speed);
+                });
+
+                 // ASSERT (invalid) The sandworm head did not turn left on top of it's own body
+                 await waitFor(() => {
+                  const {row, column} = assertNotReversed;
+                  const headTile = screen.getByTestId(`tile-${row}-${column}`);
                   expect(headTile).not.toHaveClass("tile-texture--head");
                 });
 
                 // ASSERT (valid) The sandworm head continued in the direction it was going
                 await waitFor(() => {
-                  const testSegmentValidLocation = [
-                    { row: 7, column: 11 },
-                    { row: 7, column: 10 },
-                    { row: 7, column: 9 },
-                    { row: 7, column: 8 }
+                  const assertSegmentCoordinates = [
+                    { row: 7, column: 6 },
+                    { row: 7, column: 5 },
+                    { row: 7, column: 4 },
+                    { row: 7, column: 3 }
                   ];
                   
-                  oppositeDirectionTest.data.sandWorm.forEach((segment, index) => {
-                      const {row, column} = testSegmentValidLocation[index];
+                  sandWorm.segments.forEach((segment, index) => {
+                      const {row, column} = assertSegmentCoordinates[index];
                       const tile = screen.getByTestId(`tile-${row}-${column}`);
 
                       expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
                   });
                 });
-            
           });
 
           it('does not move into a wall', async () => {
@@ -752,55 +781,56 @@ describe("Gameboard Rendering", () => {
                   act(() => {
                     resizeWindow(desktopDimensions);
                   });
-  
-                  const collideWithWallTest = {
-                    data: {
-                      sandWorm: [
-                        { key: 0, part: WormAnatomy.HEAD, location: { row: 14, column: 10 } },
-                        { key: 2, part: WormAnatomy.BODY, location: { row: 14, column: 8 } },
-                        { key: 1, part: WormAnatomy.BODY, location: { row: 14, column: 9 } },
-                        { key: 3, part: WormAnatomy.TAIL, location: { row: 14, column: 7 } },
-                      ],
-                      food: [
-                        { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
-                        { key: 1, variant: 'soulFood', location: {row: 5, column: 7 }},
-                        { key: 1, variant: 'soulFood', location: {row: 8, column: 1 }},
-                        { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
-                      ],
-                      startDirection: Direction.RIGHT,
-                    },
-                  };
 
-                  //ARRANGE
-                  render(
+                const collideWithWallTest = {
+                  data: {
+                    game: {
+                      ...baseGameData,
+                      sandWorm: {
+                        startDirection: Direction.RIGHT,
+                        segments: [
+                          { key: 0, part: WormAnatomy.HEAD, location: { row: 14, column: 10 } },
+                          { key: 2, part: WormAnatomy.BODY, location: { row: 14, column: 8 } },
+                          { key: 1, part: WormAnatomy.BODY, location: { row: 14, column: 9 } },
+                          { key: 3, part: WormAnatomy.TAIL, location: { row: 14, column: 7 } },
+                        ]
+                      },
+                    },
+                    context: baseContextData
+                  }
+                };
+
+                const {sandWorm} = collideWithWallTest.data.game;
+        
+                render(
+                  <MockGameProvider data={collideWithWallTest.context} value={baseContext}>
                     <App {...collideWithWallTest} />
-                  );
+                  </MockGameProvider>      
+                );
           
                   // wait for sandworm to render
                   await waitFor(() => {
-                    collideWithWallTest.data.sandWorm.forEach((segment) => {
+                    sandWorm.segments.forEach((segment) => {
                       const { row, column } = segment.location;
                       const tile = screen.getByTestId(`tile-${row}-${column}`);
-                      expect(tile).toHaveClass(
-                        `tile-texture--${segment.part.toLowerCase()}`
-                      );
+                      expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
                     });
-                  }, 1000);
+                  });
           
                   // ACT: press down arrow key into bottom wall boundary
                   fireEvent.keyDown(window, { key: "ArrowDown", code: "ArrowDown" });
   
                   // ASSERT (valid behavior): The sandworm head continued in the direction it was going
                   await waitFor(() => {
-                    const testSegmentValidLocation = [
+                    const assertSegmentLocations = [
                       { row: 14, column: 11 },
                       { row: 14, column: 10 },
                       { row: 14, column: 9 },
                       { row: 14, column: 8 }
                     ];
 
-                    collideWithWallTest.data.sandWorm.forEach((segment, index) => {
-                        const {row, column} = testSegmentValidLocation[index];
+                    sandWorm.segments.forEach((segment, index) => {
+                        const {row, column} = assertSegmentLocations[index];
                         const tile = screen.getByTestId(`tile-${row}-${column}`);
   
                         expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
@@ -811,7 +841,10 @@ describe("Gameboard Rendering", () => {
     });
 
     describe('Food Interaction Effects (Context Tests)', () => {
-        test('the sandworm grows in length after eating food', async () => {
+
+      describe('Sandworm eats a food item', () => {
+        
+        it('increases the sandworm length', async () => {
           /*  GIVEN the board renders,
               AND next move collides with food tile
               AND we wait for one move
@@ -822,61 +855,68 @@ describe("Gameboard Rendering", () => {
                 resizeWindow(desktopDimensions);
               });
 
-              let testLengthIncreaseContext = {
+              let contextLengthIncrease = {
                   wormLength: 4,
                   speed: 300,
+                  dropInventory: { food: 10 },
+                  maxActiveDrops: 5,
                   foodEaten: 0,
                   score: 0,
                   level: 1,
                   gameOver: false,
                   gameWon: false,
-                  increaseFoodEaten: () => {
-                    testLengthIncreaseContext.foodEaten += 1;
-                    testLengthIncreaseContext.increaseWormLength();
-                    testLengthIncreaseContext.increaseScore();
-                    testLengthIncreaseContext.increaseSpeed();
-                  },
-                  increaseWormLength: () => {
-                    testLengthIncreaseContext.wormLength += 1;
-                  },
-                  increaseScore: () => {
-                    testLengthIncreaseContext.score += 100;
-                  },
-                  increaseSpeed: () => {
-                    testLengthIncreaseContext.speed -= 50;
-                  },
+                  increaseFoodEaten: () => increaseFoodEatenTest(),
                   nextLevel: () => console.log("increase level"),
                   victoryDance: () => console.log("winner"),
                   oopsYouLost: () => console.log("loser"),
               };
 
+              const increaseFoodEatenTest = () => {
+                contextLengthIncrease.foodEaten += 1;
+            
+                increaseWormLength();
+                increaseScore();
+                increaseSpeed();
+              }
+          
+              const increaseWormLength = () => contextLengthIncrease.wormLength += 1;
+              const increaseScore = () => contextLengthIncrease.score += 100;
+              const increaseSpeed = () => contextLengthIncrease.speed -= 50;
+
               const growInLengthTestData = {
                 data: {
-                  sandWorm: [
-                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
-                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
-                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
-                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
-                  ],
-                  food: [
-                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
-                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
-                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
-                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
-                  ],
-                  startDirection: Direction.RIGHT,
-                },
+                  game: {
+                    sandWorm: {
+                      startDirection: Direction.RIGHT,
+                      segments: [
+                        { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                        { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                        { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                        { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                      ]
+                    },
+                    food: [
+                      { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                      { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                      { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                      { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                    ]
+                  },
+                  context: baseContextData
+                }
               };
-
-              render(
-                <MockGameProvider value={testLengthIncreaseContext}>
-                  <App {...growInLengthTestData} />
-                </MockGameProvider>
-              );
+    
+            const {sandWorm, food} = growInLengthTestData.data.game;
+    
+            render(
+              <MockGameProvider data={growInLengthTestData.context} value={contextLengthIncrease}>
+                <App {...growInLengthTestData} />
+              </MockGameProvider>      
+            );
 
               // wait for sandworm to render
               await waitFor(() => {
-                growInLengthTestData.data.sandWorm.forEach((segment) => {
+                sandWorm.segments.forEach((segment) => {
                   const { row, column } = segment.location;
                   const tile = screen.getByTestId(`tile-${row}-${column}`);
                   expect(tile).toHaveClass(
@@ -887,25 +927,25 @@ describe("Gameboard Rendering", () => {
 
               // wait one sandworm move
               act(() => {
-                jest.advanceTimersByTime(testContext.speed);
+                jest.advanceTimersByTime(contextLengthIncrease.speed);
               });
 
               //assert that head tile exists on a food coordinate
               await waitFor(() => {
-                const {row, column} = growInLengthTestData.data.food[0].location;
+                const {row, column} = food[0].location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass('tile-texture--head');
               });
 
               act(() => {
-                testLengthIncreaseContext.increaseFoodEaten();
+                contextLengthIncrease.increaseFoodEaten();
               })
 
               const assertWormLength = 5; 
 
               //assert game context is updated to increase body by 1 tile
               await waitFor(() => {                
-                expect(testLengthIncreaseContext.wormLength).toEqual(assertWormLength);
+                expect(contextLengthIncrease.wormLength).toEqual(assertWormLength);
               });
 
               //assert new sandworm length renders in gameboard
@@ -919,7 +959,7 @@ describe("Gameboard Rendering", () => {
               });
         });
 
-        test('the score increasing after eating food', async() => {
+        it('increases the score', async() => {
           /*  GIVEN the board renders,
               AND next move collides with food tile
               AND we wait for one move
@@ -930,9 +970,11 @@ describe("Gameboard Rendering", () => {
                 resizeWindow(desktopDimensions);
               });
 
-              let testLengthIncreaseContext = {
+              let contextIncreaseScore = {
                 wormLength: 4,
                 speed: 300,
+                maxActiveDrops: 5,
+                dropInventory: {food: 10},
                 foodEaten: 0,
                 score: 0,
                 level: 1,
@@ -945,46 +987,54 @@ describe("Gameboard Rendering", () => {
               };
 
               const increaseFoodEatenTest = () => {
-                testLengthIncreaseContext.foodEaten += 1;
+                contextIncreaseScore.foodEaten += 1;
             
                 increaseWormLength();
                 increaseScore();
                 increaseSpeed();
               }
           
-              const increaseWormLength = () => testLengthIncreaseContext.wormLength += 1;
-              const increaseScore = () => testLengthIncreaseContext.score += 100;
-              const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
+              const increaseWormLength = () => contextIncreaseScore.wormLength += 1;
+              const increaseScore = () => contextIncreaseScore.score += 100;
+              const increaseSpeed = () => contextIncreaseScore.speed -= 50;
 
-              const increaseScoreTest = {
+              const increaseScoreTestData = {
                 data: {
-                  sandWorm: [
-                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
-                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
-                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
-                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
-                  ],
-                  food: [
-                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
-                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
-                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
-                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
-                  ],
-                  startDirection: Direction.RIGHT,
-                },
+                  game: {
+                    sandWorm: {
+                      startDirection: Direction.RIGHT,
+                      segments: [
+                        { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                        { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                        { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                        { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                      ]
+                    },
+                    food: [
+                      { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                      { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                      { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                      { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                    ]
+                  },
+                  context: baseContextData
+                }
               };
-
-              render(
-                <MockGameProvider value={testLengthIncreaseContext}>
-                  <App {...increaseScoreTest} />
-                </MockGameProvider>
-              );
+    
+            const {sandWorm, food} = increaseScoreTestData.data.game;
+    
+            render(
+              <MockGameProvider data={increaseScoreTestData.context} value={contextIncreaseScore}>
+                <App {...increaseScoreTestData} />
+              </MockGameProvider>
+            );      
 
               // wait for sandworm to render
               await waitFor(() => {
-                increaseScoreTest.data.sandWorm.forEach((segment) => {
+                sandWorm.segments.forEach((segment) => {
                   const { row, column } = segment.location;
                   const tile = screen.getByTestId(`tile-${row}-${column}`);
+
                   expect(tile).toHaveClass(
                     `tile-texture--${segment.part.toLowerCase()}`
                   );
@@ -993,28 +1043,28 @@ describe("Gameboard Rendering", () => {
 
               // wait one sandworm move
               act(() => {
-                jest.advanceTimersByTime(testContext.speed);
+                jest.advanceTimersByTime(contextIncreaseScore.speed);
               });
 
               //assert that head tile exists on a food coordinate
               await waitFor(() => {
-                const {row, column} = increaseScoreTest.data.food[0].location;
+                const {row, column} = food[0].location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass('tile-texture--head');
               });
 
               act(() => {
-                testLengthIncreaseContext.increaseFoodEaten();
+                contextIncreaseScore.increaseFoodEaten();
               })
 
               //assert game context is updated to increase body by 1 tile
               await waitFor(() => {
                 const assertScore = 100; 
-                expect(testLengthIncreaseContext.score).toEqual(assertScore);
+                expect(contextIncreaseScore.score).toEqual(assertScore);
               });
         });
 
-        it('speed increases after eating food', async() => {
+        it('increases the game speed', async() => {
           /*  GIVEN the board renders,
               AND next move collides with food tile
               AND we wait for one move
@@ -1025,25 +1075,8 @@ describe("Gameboard Rendering", () => {
                 resizeWindow(desktopDimensions);
               });
 
-              const increaseSpeedTest = {
-                data: {
-                  sandWorm: [
-                    { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
-                    { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
-                    { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
-                    { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
-                  ],
-                  food: [
-                    { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
-                    { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
-                    { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
-                    { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
-                  ],
-                  startDirection: Direction.RIGHT,
-                },
-              };
 
-              let testLengthIncreaseContext = {
+              let contextSpeedIncrease = {
                 wormLength: 4,
                 speed: 300,
                 foodEaten: 0,
@@ -1058,26 +1091,51 @@ describe("Gameboard Rendering", () => {
               };
 
               const increaseFoodEatenTest = () => {
-                testLengthIncreaseContext.foodEaten += 1;
+                contextSpeedIncrease.foodEaten += 1;
             
                 increaseWormLength();
                 increaseScore();
                 increaseSpeed();
               }
           
-              const increaseWormLength = () => testLengthIncreaseContext.wormLength += 1;
-              const increaseScore = () => testLengthIncreaseContext.score += 100;
-              const increaseSpeed = () => testLengthIncreaseContext.speed -= 50;
+              const increaseWormLength = () => contextSpeedIncrease.wormLength += 1;
+              const increaseScore = () => contextSpeedIncrease.score += 100;
+              const increaseSpeed = () => contextSpeedIncrease.speed -= 50;
+
+              const increaseSpeedTestData = {
+                data: {
+                  game: {
+                    sandWorm: {
+                      startDirection: Direction.RIGHT,
+                      segments: [
+                        { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                        { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                        { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                        { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                      ]
+                    },
+                    food: [
+                      { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+                      { key: 1, variant: 'soulFood', location: {row: 10, column: 10 }},
+                      { key: 1, variant: 'soulFood', location: {row: 12, column: 12 }},
+                      { key: 1, variant: 'soulFood', location: {row: 14, column: 14 }}
+                    ]
+                  },
+                  context: baseContextData
+                }
+              };
+              
+              const {sandWorm, food} = increaseSpeedTestData.data.game;
 
               render(
-                <MockGameProvider value={testLengthIncreaseContext}>
-                  <App {...increaseSpeedTest} />
+                <MockGameProvider data={increaseSpeedTestData.context} value={contextSpeedIncrease}>
+                  <App {...increaseSpeedTestData} />
                 </MockGameProvider>
               );
 
               // wait for sandworm to render
               await waitFor(() => {
-                increaseSpeedTest.data.sandWorm.forEach((segment) => {
+                sandWorm.segments.forEach((segment) => {
                   const { row, column } = segment.location;
                   const tile = screen.getByTestId(`tile-${row}-${column}`);
                   expect(tile).toHaveClass(
@@ -1088,28 +1146,26 @@ describe("Gameboard Rendering", () => {
 
               // wait one sandworm move
               act(() => {
-                jest.advanceTimersByTime(testContext.speed);
+                jest.advanceTimersByTime(baseContext.speed);
               });
 
               //assert that head tile exists on a food coordinate
               await waitFor(() => {
-                const {row, column} = increaseSpeedTest.data.food[0].location;
+                const {row, column} = food[0].location;
                 const tile = screen.getByTestId(`tile-${row}-${column}`);
                 expect(tile).toHaveClass('tile-texture--head');
               });
 
               act(() => {
-                testLengthIncreaseContext.increaseFoodEaten();
+                contextSpeedIncrease.increaseFoodEaten();
               })
 
               //assert game context is updated to increase body by 1 tile
               await waitFor(() => {
                 const assertSpeed = 250; 
-                expect(testLengthIncreaseContext.speed).toEqual(assertSpeed);
+                expect(contextSpeedIncrease.speed).toEqual(assertSpeed);
               });
-
         });
-    });
 
 
   //test('Food is removed from pantry once placed on the board', () => {});

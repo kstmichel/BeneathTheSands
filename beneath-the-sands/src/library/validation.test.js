@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom"; // Ensure this import is present
 import { Direction, WormAnatomy } from './definitions';
-import { getGridArray } from "./utils";
+import { getGridArray } from "./gameGrid";
 import { 
     validateNextMove,
     isBoundaryCollisionDetected,
