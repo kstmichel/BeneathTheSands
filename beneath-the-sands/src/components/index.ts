@@ -1,5 +1,5 @@
-import GameBoard from './GameBoard';
-import GameTile from './GameTile';
+import GameBoard from './GameBoard/GameBoard';
+import GameTile from './GameTile/GameTile';
 
 export {
     GameBoard,
