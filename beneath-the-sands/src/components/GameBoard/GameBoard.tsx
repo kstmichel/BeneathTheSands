@@ -33,7 +33,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [wormPath, setWormPath] = useState<Direction[]>([]);
 
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
-    const [tempGameOver, setTempGameOver] = useState<boolean>(false);
 
     const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
@@ -134,9 +133,9 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                 const {row, column}: GridCoordinates = newNextMove.coordinates;
                 const nextTile: Tile = gameField.tileGrid[row][column];
                 
-                const isFoodEatenBySandwom: boolean = nextTile.type === GroundTexture.FOOD;
+                const isFoodEatenBySandworm: boolean = nextTile.type === GroundTexture.FOOD;
 
-                if (isFoodEatenBySandwom) {
+                if (isFoodEatenBySandworm) {
                     increaseFoodEaten();
                 }
 
@@ -159,6 +158,37 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         setInputDirection(null);
 
     }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, determineSandwormNextMove]);
+
+    const addWormSegment = useCallback(async() => {
+        let growSandWormData = [...sandWorm];
+        const tailIndex: number = growSandWormData.length - 1;
+        const newBody = {...growSandWormData[tailIndex]};
+        newBody.part = WormAnatomy.BODY;
+
+        growSandWormData.splice(tailIndex, 0, newBody);
+
+        // update key and location for each sandworm segment
+        growSandWormData = growSandWormData.map((segment, index) => {
+            let newLocation: GridCoordinates = {...segment.location};
+
+            if(segment.part === WormAnatomy.TAIL) {
+                // to give the illusion the sandworm grew, update tail coordinate by locating the tile behind sandworm
+                const oppositeDirection = getOppositeDirection(wormPath[wormLength - 2])
+                const nextMove: NextMove = getNextMove(newLocation, oppositeDirection);
+                newLocation = nextMove.coordinates;
+            }   
+
+            return {
+                key: index,
+                part: segment.part,
+                location: {
+                    ...newLocation
+                }
+            } as WormSegment
+        });
+
+        setSandWorm([...growSandWormData]);
+    }, [sandWorm, wormPath, wormLength]);
 
     const createGameBoardGrid = useCallback(async(boardDimensions: Dimension): Promise<GameGrid> => {
         if(!boardDimensions.rows || boardDimensions.rows === 0 || !boardDimensions.columns || boardDimensions.columns === 0) throw new Error('Cannot create game board.');
@@ -196,9 +226,10 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         const gameboardGrid = await createGameBoardGrid(gameDimensions);
         const gamefield: GameField = {tileGrid: gameboardGrid, boardSize: gameDimensions};
         const initialWormPath: Direction[] = setupWormPath(wormLength, wormDirection);
-        
+        const tileSize: number = calculateTileSize(window, deviceType);
+
         setDeviceType(deviceType);
-        setTileSize(getTileSize(window, deviceType));
+        setTileSize(tileSize);
         setGameField(gamefield);
         setWormPath(initialWormPath)
 
@@ -256,7 +287,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     // Sandworm Speed
     useEffect(() => {
-        if(tempGameOver) return; 
+        if(gameOver) return; 
 
         const interval = setInterval(() => {
             moveSandWorm();
@@ -267,7 +298,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     
         return () => clearInterval(interval);
 
-    }, [moveSandWorm, tempGameOver, speed, timer]);
+    }, [moveSandWorm, gameOver, speed, timer]);
 
     useEffect(() => {
         if(deviceSize){
@@ -275,37 +306,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         }
 
     }, [deviceSize])
-
-    const addWormSegment = useCallback(async() => {
-        let growSandWormData = [...sandWorm];
-        const tailIndex: number = growSandWormData.length - 1;
-        const newBody = {...growSandWormData[tailIndex]};
-        newBody.part = WormAnatomy.BODY;
-
-        growSandWormData.splice(tailIndex, 0, newBody);
-
-        // update key and location for each sandworm segment
-        growSandWormData = growSandWormData.map((segment, index) => {
-            let newLocation: GridCoordinates = {...segment.location};
-
-            if(segment.part === WormAnatomy.TAIL) {
-                // to give the illusion the sandworm grew, update tail coordinate by locating the tile behind sandworm
-                const oppositeDirection = getOppositeDirection(wormPath[wormLength - 2])
-                const nextMove: NextMove = getNextMove(newLocation, oppositeDirection);
-                newLocation = nextMove.coordinates;
-            }   
-
-            return {
-                key: index,
-                part: segment.part,
-                location: {
-                    ...newLocation
-                }
-            } as WormSegment
-        });
-
-        setSandWorm([...growSandWormData]);
-    }, [sandWorm, wormPath, wormLength]);
 
     useEffect(() => {
         if (sandWorm.length < wormLength) {

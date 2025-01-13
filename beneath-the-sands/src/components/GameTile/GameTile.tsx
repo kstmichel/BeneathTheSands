@@ -1,6 +1,6 @@
 import React from 'react';
 import Grid from '@mui/material/Grid2';
-import { Tile, GridCoordinates } from '../../library/definitions';
+import { Tile } from '../../library/definitions';
 
 export interface GameTileProps {
     tile: Tile;
