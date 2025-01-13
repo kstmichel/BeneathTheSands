@@ -80,16 +80,30 @@ export const GameDimensions: Record<Device, Dimension> = {
     }
 }
 
+export interface DropInventory {
+    food: number;
+}
+
+export interface Level {
+    drops: {
+        food: number,
+        coins: number, 
+        rubies: number
+    },
+    speed: number
+}
+
 export interface GridCoordinates {
     row: number;
     column: number;
 }
 
 export interface Tile {
-    type: GroundTexture | WormAnatomy,
-    size: number,
-    data?: Sand | Food | WormSegment,
+    type: TileType,
+    data: TileData,
 }
+
+export type TileType = GroundTexture | WormAnatomy;
 
 interface TileData {
     location: GridCoordinates

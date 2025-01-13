@@ -19,7 +19,7 @@ interface GameBoardProps {
 function GameBoard({windowSize, gameData}: GameBoardProps) {
     const initialRef = useRef(true);
 
-    const { wormLength, level, speed, score, foodEaten, gameOver, gameWon, increaseFoodEaten } = useGameContext();
+    const { wormLength, level, speed, score, maxActiveDrops, dropInventory, foodEaten, gameOver, gameWon, increaseFoodEaten, nextLevel } = useGameContext();
 
     const [deviceSize, setDeviceType] = useState<Device | null>(null);
     const [timer, setTimer] = useState<number>(0);
@@ -31,6 +31,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm.segments);
     const [wormDirection, setWormDirection] = useState<Direction>(gameData.sandWorm.startDirection);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
+    const [activeDropCount, setActiveDropCount] = useState<number>(maxActiveDrops);
 
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
 
@@ -137,6 +138,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
                 if (isFoodEatenBySandworm) {
                     increaseFoodEaten();
+                    setActiveDropCount((prevCount) => prevCount - 1);
                 }
 
                 setWormDirection(newNextMove.direction);
@@ -309,14 +311,34 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     useEffect(() => {
         if (sandWorm.length < wormLength) {
-            const increaseSandWormLength = async() => {
+            const sandwormGrowsInLength = async() => {
                 await addWormSegment();
             }
 
-            increaseSandWormLength();
+            sandwormGrowsInLength();
         }
        
     }, [wormLength, sandWorm, addWormSegment])
+
+    useEffect(() => {
+        if (gameField.tileGrid.length > 0 && dropInventory.food > 0 && activeDropCount < maxActiveDrops) {
+            const dropIsAddedToBoard = () => {
+                const randomValidSandTile: Tile = getRandomTileByType(gameField.tileGrid, GroundTexture.SAND);
+                const updatedTileGrid: GameGrid = addDropItemToBoard(gameField, randomValidSandTile);
+
+                setGameField((prevGameField) => ({...prevGameField, tileGrid: updatedTileGrid}));
+                setActiveDropCount((prevCount) => prevCount + 1);
+            };
+        
+            dropIsAddedToBoard();
+        }
+      }, [gameField, sandWorm, dropInventory.food, activeDropCount, maxActiveDrops]);
+
+    useEffect(() => {
+        if(gameField.tileGrid.length > 0 && dropInventory.food === 0 && activeDropCount === 0){
+            nextLevel();
+        }
+    }, [activeDropCount, dropInventory.food, gameField.tileGrid.length, nextLevel]);
 
     useEffect(() => {
         if (wormPath.length > 0 && wormPath.length < sandWorm.length) {
@@ -350,6 +372,8 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
                     <li>Level: {level}</li>
                     <li>Worm Length: {wormLength}</li>
                     <li>Food Eaten: {foodEaten}</li>
+                    <li>Drop Inventory: {dropInventory.food}</li>
+                    <li>Active Drop Count: {activeDropCount}</li>
                     <li>Score: {score}</li>
                     <li>Game Over: {String(gameOver)}</li>
                     <li>Game Won: {String(gameWon)}</li>

@@ -1167,16 +1167,120 @@ describe("Gameboard Rendering", () => {
               });
         });
 
+        it('removes food item from drop inventory', async() => {
+           /* GIVEN the board renders,
+              AND next move collides with food tile
+              AND we wait for one move
+              THEN the sandworm eats the food item
+              AND the speed increases by 50ms */
 
-  //test('Food is removed from pantry once placed on the board', () => {});
+              act(() => {
+                resizeWindow(desktopDimensions);
+              });
 
-  /* 5. Food is removed from pantry once placed on the board
-        GIVEN the pantry has 20 food items,
-        WHEN user input is detected
-        AND next move collides with food tile
-        THEN place new food item on board
-        AND remove one food item from pantry
-  */
+
+              let contextRemoveFood = {
+                wormLength: 4,
+                speed: 300,
+                foodEaten: 0,
+                maxActiveDrops: 5,
+                dropInventory: {food: 10},
+                score: 0,
+                level: 1,
+                gameOver: false,
+                gameWon: false,
+                increaseFoodEaten: () => increaseFoodEatenTest(),
+                nextLevel: () => console.log("increase level"),
+                victoryDance: () => console.log("winner"),
+                oopsYouLost: () => console.log("loser"),
+              };
+
+              const increaseFoodEatenTest = () => {
+                contextRemoveFood.foodEaten += 1;
+            
+                increaseWormLength();
+                increaseScore();
+                increaseSpeed();
+
+                if(contextRemoveFood.dropInventory.food > 0){
+                  removeDropFromInventory();
+                }             
+             }
+          
+              const increaseWormLength = () => contextRemoveFood.wormLength += 1;
+              const increaseScore = () => contextRemoveFood.score += 100;
+              const increaseSpeed = () => contextRemoveFood.speed -= 50;
+              const removeDropFromInventory = () => contextRemoveFood.dropInventory.food -= 1;
+
+              const removeFoodData = {
+                data: {
+                  game: {
+                    sandWorm: {
+                      startDirection: Direction.RIGHT,
+                      segments: [
+                        { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 6 } },
+                        { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 5 } },
+                        { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 4 } },
+                        { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 3 } },
+                      ]
+                    },
+                    food: [
+                      { variant: 'soulFood', location: {row: 7, column: 7 }},
+                      { variant: 'soulFood', location: {row: 10, column: 10 }},
+                      { variant: 'soulFood', location: {row: 12, column: 12 }},
+                      { variant: 'soulFood', location: {row: 14, column: 14 }},
+                      { variant: 'soulFood', location: {row: 14, column: 17 }}
+                    ]
+                  },
+                  context: baseContextData
+                }
+              };
+
+              const {sandWorm, food} = removeFoodData.data.game;
+
+              render(
+                <MockGameProvider data={removeFoodData.context} value={contextRemoveFood}>
+                  <App {...removeFoodData} />
+                </MockGameProvider>      
+              );
+
+              await waitFor(() => {
+                sandWorm.segments.forEach((segment) => {
+                  const { row, column } = segment.location;
+                  const tile = screen.getByTestId(`tile-${row}-${column}`);
+                  expect(tile).toHaveClass(`tile-texture--${segment.part.toLowerCase()}`);
+                });
+              });
+
+              act(() => {
+                jest.advanceTimersByTime(contextRemoveFood.speed);
+              });
+
+              //assert snake ate food
+              await waitFor(() => {
+                const {row, column} = food[0].location;
+                const tile = screen.getByTestId(`tile-${row}-${column}`);
+                expect(tile).toHaveClass('tile-texture--head');
+              });
+
+              act(() => {
+                contextRemoveFood.increaseFoodEaten();
+              })
+
+              await waitFor(() => {
+                const assertDropFoodTotalReduced = 9;
+                expect(contextRemoveFood.dropInventory.food).toStrictEqual(assertDropFoodTotalReduced);
+              });
+
+              await waitFor(() => {
+                const assertTotalRenderedFoodTiles = 4;
+                const foodTiles = screen.getAllByTestId(`tile-type-food`);
+                expect(foodTiles.length).toStrictEqual(assertTotalRenderedFoodTiles);
+              });
+        });
+      });
+    });
+
 
   //describe('Game states (win/lose)', () => {});
 
