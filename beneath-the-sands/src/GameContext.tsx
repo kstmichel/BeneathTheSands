@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { ContextData, DropInventory } from './library/definitions';
 
 interface GameContextProps {
   wormLength: number;
@@ -16,7 +17,9 @@ interface GameContextProps {
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
-export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => { 
+export const GameProvider: React.FC<{ data: ContextData, children: ReactNode }> = ({ data, children }) => { 
+  const maxActiveDrops: number = 5;
+  
   const [wormLength, setWormLength] = useState(4);
   const [speed, setSpeed] = useState(300);
   const [foodEaten, setFoodEaten] = useState(0);

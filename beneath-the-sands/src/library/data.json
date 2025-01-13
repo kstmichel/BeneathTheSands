@@ -1,67 +1,103 @@
 
  {
-    "sandWorm": [
-        { 
-            "key": 0,
-            "part": "head",
-            "location": { 
-                "row": 7, 
-                "column": 10
-            } 
-        },
-        { 
-            "key": 1,
-            "part": "body",
-            "location": { 
-                "row": 7, 
-                "column": 9
-            } 
-        }, 
-        { 
-            "key": 2,
-            "part": "body",
-            "location": { 
-                "row": 7, 
-                "column": 8
-            } 
-        },
-        { 
-            "key": 3,
-            "part": "tail",
-            "location": {
-                "row": 7, 
-                "column": 7
-            } 
-        }
-    ],
-    "food": [
-        { 
-            "variant": "soulFruit", 
-            "location": {
-                "row": 3, 
-                "column": 3 
+    "game": {
+        "sandWorm": {
+            "startDirection": "RIGHT",
+            "segments": [
+                { 
+                    "key": 0,
+                    "part": "head",
+                    "location": { 
+                        "row": 7, 
+                        "column": 10
+                    } 
+                },
+                { 
+                    "key": 1,
+                    "part": "body",
+                    "location": { 
+                        "row": 7, 
+                        "column": 9
+                    } 
+                }, 
+                { 
+                    "key": 2,
+                    "part": "body",
+                    "location": { 
+                        "row": 7, 
+                        "column": 8
+                    } 
+                },
+                { 
+                    "key": 3,
+                    "part": "tail",
+                    "location": {
+                        "row": 7, 
+                        "column": 7
+                    } 
+                }
+        ]},
+        "food": [
+            { 
+                "variant": "soulFruit", 
+                "location": {
+                    "row": 3, 
+                    "column": 3 
+                }
+            },
+            { 
+                "variant": "soulFruit", 
+                "location": {
+                    "row": 5, 
+                    "column": 7 
+                }
+            },
+            { 
+                "variant": "soulFruit", 
+                "location": {
+                    "row": 8, 
+                    "column": 1 
+                }
+            },
+            { 
+                "variant": "soulFruit", 
+                "location": {
+                    "row": 9, 
+                    "column": 9
+                }
+            },
+            { 
+                "variant": "soulFruit", 
+                "location": {
+                    "row": 10, 
+                    "column": 15
+                }
             }
-        },
-        { 
-            "variant": "soulFruit", 
-            "location": {
-                "row": 5, 
-                "column": 7 
+        ]
+    },
+    "context": {
+        "levels": [
+            { 
+                "drops": {
+                    "food": 10,
+                    "coins": 5,
+                    "rubies": 1
+                }
+            },
+            { 
+                "drops": {
+                    "food": 20,
+                    "coins": 6,
+                    "rubies": 2
+                }
+            },
+            { 
+                "drops": {
+                    "food": 25,
+                    "coins": 7,
+                    "rubies": 2
+                }
             }
-        },
-        { 
-            "variant": "soulFruit", 
-            "location": {
-                "row": 8, 
-                "column": 1 
-            }
-        },
-        { 
-            "variant": "soulFruit", 
-            "location": {
-                "row": 9, 
-                "column": 9
-            }
-        }
-    ]
+        ]
+    }
 }

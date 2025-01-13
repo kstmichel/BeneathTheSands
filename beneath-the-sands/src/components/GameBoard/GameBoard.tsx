@@ -22,11 +22,7 @@ import { useGameContext } from '../../GameContext';
 
 interface GameBoardProps {
     windowSize: WindowSize,
-    gameData: {
-        sandWorm: WormSegment[],
-        food: Food[],
-        startDirection: Direction,
-    }
+    gameData: GameData
 }
 
 function GameBoard({windowSize, gameData}: GameBoardProps) {
@@ -41,10 +37,9 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [totalTiles, setTotalTiles] = useState<number>(0);
     const [tileSize, setTileSize] = useState<number>(0);
 
-    const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm);
-    const [wormDirection, setWormDirection] = useState<Direction>(gameData.startDirection);
+    const [sandWorm, setSandWorm] = useState<WormSegment[]>(gameData.sandWorm.segments);
+    const [wormDirection, setWormDirection] = useState<Direction>(gameData.sandWorm.startDirection);
     const [wormPath, setWormPath] = useState<Direction[]>([]);
-    const [food, setFood] = useState<Food[]>(gameData.food);
 
     const [inputDirection, setInputDirection] = useState<Direction | null>(null);
     const [tempGameOver, setTempGameOver] = useState<boolean>(false);
@@ -209,7 +204,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             }
         });
 
-        food.forEach((foodItem: Food) => {
+        gameData.food.forEach((foodItem: Food) => {
             const {row, column} = foodItem.location;
             const foodTile: Tile = {...desertGameBoard[row][column]};
 
@@ -221,7 +216,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         });
 
         return Promise.resolve(desertGameBoard);
-     }, [sandWorm, food]);
+     }, [sandWorm, gameData.food]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         const gameDimensions: Dimension = {...GameDimensions[deviceType]}

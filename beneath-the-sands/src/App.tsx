@@ -1,14 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import { GameProvider } from './GameContext';
 import { GameBoard } from './components';
-import { WindowSize, WormSegment, Food, Direction } from './library/definitions';
+import { WindowSize, GameData, ContextData } from './library/definitions';
 
 interface AppProps {
   data: {
-    sandWorm: WormSegment[],
-    food: Food[],
-    startDirection: Direction,
-  } 
+    game: GameData,
+    context: ContextData,
+  }
 }
 
 function App({data}: AppProps) {
@@ -18,8 +17,12 @@ function App({data}: AppProps) {
   // Use Context API to manage timers and other global state
   // Use Reducer to manage game state
 
-  if (!data || !data.sandWorm || data.sandWorm.length === 0 || !data.food || data.food.length === 0 || !data.startDirection) {
+  if (!data || !data.game.sandWorm || !data.game.sandWorm.segments || data.game.sandWorm.segments.length === 0 || !data.game.food || data.game.food.length === 0 || !data.game.sandWorm.startDirection) {
     throw new Error('game element data not found during rendering');
+  }
+
+  if (!data.context || !data.context.levels || data.context.levels.length === 0 ) {
+    throw new Error('context data not found during rendering');
   }
 
   const [windowSize, setWindowSize] = useState<WindowSize>({
@@ -42,11 +45,11 @@ function App({data}: AppProps) {
 
   return (
     <div className="App">
-      <GameProvider>
+      <GameProvider data={data.context}>
         <h1 className="text-3xl font-bold underline">Beneath the Sands Introduction</h1>
         <h2 className="text-2xl">Level Cutscene (loading screen)</h2>
 
-        <GameBoard windowSize={windowSize} gameData={data} />
+        <GameBoard windowSize={windowSize} gameData={data.game} />
       </GameProvider>
     </div>
   );

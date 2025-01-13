@@ -25,9 +25,15 @@ export enum WormAnatomy {
 }
 
 export interface GameData {
-    sandWorm: WormSegment[],
+    sandWorm: {
+        startDirection: Direction,
+        segments: WormSegment[]
+    },
     food: Food[],
-    startDirection: Direction,
+}
+
+export interface ContextData {
+    levels: Level[]
 }
 
 export type GameGrid = Tile[][];

@@ -5,14 +5,17 @@ import App from './App';
 import './App.css';
 import reportWebVitals from './reportWebVitals';
 import gameData from './library/data.json';
-import { GameData, Direction, WormAnatomy, WormSegment, Food } from './library/definitions';
+import { GameData, ContextData, Direction, WormAnatomy, WormSegment, Food } from './library/definitions';
 
 const rootElement = document.getElementById('root');
 
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
 
-  const processedSandWormData: WormSegment[] = gameData.sandWorm.map((segment) => {
+  const strDirection: string = gameData.game.sandWorm.startDirection;
+
+  const defaultSandwormDirection: Direction | undefined = (Object.values(Direction) as string[]).includes(strDirection) ? strDirection as Direction : undefined;
+  const processedSandWormData: WormSegment[] = gameData.game.sandWorm.segments.map((segment) => {
     const part = Object.values(WormAnatomy).find((value) => value === segment.part);
     if (!part) throw new Error(`Invalid worm part: ${segment.part}`);
 
@@ -22,15 +25,21 @@ if (rootElement) {
     };
   });
 
-  const initialGameData: GameData = {
-    sandWorm: processedSandWormData as WormSegment[],
-    food: gameData.food as Food[],
-    startDirection: Direction.RIGHT as Direction,
+  const appData = {
+    game: {
+      sandWorm: {
+        startDirection: defaultSandwormDirection || Direction.RIGHT,
+        segments: processedSandWormData,
+      },
+      food: gameData.game.food as Food[],
+    } as GameData,
+    context: gameData.context as ContextData
+
   }
 
   root.render(
     <React.StrictMode>
-      <App data={initialGameData} />
+      <App data={appData} />
     </React.StrictMode>
   );
 }
