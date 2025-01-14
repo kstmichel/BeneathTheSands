@@ -1,5 +1,5 @@
-import { GameField, Direction, GridCoordinates, NextMove } from './definitions';
-import { filterValidPossibleMoves } from './validation';
+import { GameField, Direction, GridCoordinates, NextMove, WormSegment } from './definitions';
+import { validateNextMove, filterValidPossibleMoves, isBoundaryCollisionDetected } from './validation';
 
 export const getNextMove = (coordinates: GridCoordinates, direction: Direction): NextMove  => {
     if (!coordinates || !direction) throw new Error('Cannot get next coordinate because coordinate or direction are invalid.');
@@ -28,6 +28,35 @@ export const getNextMove = (coordinates: GridCoordinates, direction: Direction):
  
      return nextMove;
  };
+
+export const determineSandwormNextMove = (gameField: GameField, sandWorm: WormSegment[], wormDirection: Direction, inputDirection?: Direction): NextMove => {
+    if(!gameField || !sandWorm || sandWorm.length === 0 || !wormDirection) throw new Error("Unable to determine sandworm next move. Invalid argumments were found.")
+    
+    try{
+        const headCoordinates: GridCoordinates = sandWorm[0].location;
+
+        if(inputDirection) {
+            const nextMove: NextMove = getNextMove(headCoordinates, inputDirection);
+
+            if (validateNextMove(nextMove, gameField)){
+                return nextMove;
+            }
+        }
+
+        const nextMoveByDefault: NextMove = getNextMove(headCoordinates, wormDirection);
+
+        if (isBoundaryCollisionDetected(nextMoveByDefault, gameField)) {
+            // Sandworm hit the boundary, move it in a random direction to keep things spicy!
+            // TODO: increase difficulty as levels progress where hitting boundary means user loses the game
+            return getRandomizedNextMove(gameField, headCoordinates, wormDirection);
+        }
+
+        return nextMoveByDefault;
+
+    } catch (error) {
+        throw new Error(`Issue occurred setting sandworm direction. ${error}`);
+    }
+};
  
 export const getOppositeDirection = (direction: Direction): Direction => {
     if(!direction) throw new Error('Cannot return opposite direction when direction argument is invalid.');
@@ -81,7 +110,7 @@ export const getRandomizedNextMove = (gameField: GameField, coordinates: GridCoo
     const validMoves: NextMove[] = filterValidPossibleMoves(nextMoveOptions, gameField);
 
     if(validMoves.length === 0) {
-        throw new Error(`All next moves are invalid: ${nextMoveOptions}`);
+        throw new Error(`All next moves are invalid.`);
     }
 
     return validMoves[0];

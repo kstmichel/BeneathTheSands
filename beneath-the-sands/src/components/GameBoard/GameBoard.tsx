@@ -6,9 +6,8 @@ import { GameTile } from '../../components/';
 import { WindowSize, GameData, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, GridCoordinates} from '../../library/definitions';
 import { getDeviceType } from '../../library/utils';
 import { createGameField, getTotalTiles, calculateTileSize, getRandomTileByType, addDropItemToBoard, addWormSegment } from '../../library/gameGrid';
-import { getNextMove, getRandomizedNextMove } from '../../library/movement';
+import { getNextMove, determineSandwormNextMove } from '../../library/movement';
 import { setupWormPath, extendWormPath, addNewDirectionToWormPath, getDirectionByWormPath } from '../../library/navigation';
-import { validateNextMove, isBoundaryCollisionDetected } from '../../library/validation';
 import { useGameContext } from '../../GameContext';
 
 interface GameBoardProps {
@@ -33,7 +32,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
     const [wormPath, setWormPath] = useState<Direction[]>([]);
     const [activeDropCount, setActiveDropCount] = useState<number>(maxActiveDrops);
 
-    const [inputDirection, setInputDirection] = useState<Direction | null>(null);
+    const [inputDirection, setInputDirection] = useState<Direction | undefined>(undefined);
 
     const renderSandWormMovement = useCallback((newWormLocation: WormSegment[]) => {
          /*
@@ -88,33 +87,6 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
     }, [gameField, wormPath]);
 
-    const determineSandwormNextMove: () => NextMove = useCallback(() => {
-        try{
-            const headCoordinates: GridCoordinates = sandWorm[0].location;
-
-            if(inputDirection) {
-                const nextMove: NextMove = getNextMove(headCoordinates, inputDirection);
-
-                if (validateNextMove(nextMove, gameField)){
-                    return nextMove;
-                }
-            }
-
-            const nextMoveByDefault: NextMove = getNextMove(headCoordinates, wormDirection);
-
-            if (isBoundaryCollisionDetected(nextMoveByDefault, gameField)) {
-                // Sandworm hit the boundary, move it in a random direction to keep things spicy!
-                // TODO: increase difficulty as levels progress where hitting boundary means user loses the game
-                return getRandomizedNextMove(gameField, headCoordinates, wormDirection);
-            }
-
-            return nextMoveByDefault;
-
-        } catch (error) {
-            throw new Error(`Error occurred setting sandworm direction: ${error}`);
-        }
-    }, [inputDirection, wormDirection, sandWorm, gameField]);
-
     const moveSandWorm = useCallback(async () => {
         if (!sandWorm || sandWorm.length === 0) {
             throw new Error('Worm location was not found');
@@ -129,7 +101,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
             let newNextMove: NextMove;
             
             if (segment.part === WormAnatomy.HEAD) {
-                newNextMove = determineSandwormNextMove();
+                newNextMove = determineSandwormNextMove(gameField, sandWorm, wormDirection, inputDirection);
 
                 const {row, column}: GridCoordinates = newNextMove.coordinates;
                 const nextTile: Tile = gameField.tileGrid[row][column];
@@ -157,9 +129,9 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
 
         setSandWorm(newSandwormLocation);
         renderSandWormMovement(newSandwormLocation);
-        setInputDirection(null);
+        setInputDirection(undefined);
 
-    }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, determineSandwormNextMove]);
+    }, [gameField, sandWorm, wormPath, increaseFoodEaten, renderSandWormMovement, inputDirection, wormDirection]);
 
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         const gameDimensions: Dimension = {...GameDimensions[deviceType]}
