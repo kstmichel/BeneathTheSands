@@ -67,13 +67,91 @@ describe('getTotalTiles Gameboard Function', () => {
 });
 
 describe('getRandomTileByType Gameboard Function', () => {
- //TODO
+    it('returns a random tile based on the desired tile type (SAND)', () => {
+        const gameBoardArray = getGridArray({rows: 15, columns: 10});
+        const randomTile = getRandomTileByType(gameBoardArray, GroundTexture.SAND);
+        const {row, column} = randomTile.data.location;
+        const assertBoundary = row >= 0 && row <= 15 && column >= 0 && column <= 10; 
+
+        expect(randomTile.type).toEqual(GroundTexture.SAND);
+        expect(assertBoundary).toBeTruthy();
+    });
+
+    describe('error handling', () => {
+        const errorMessage = "Issue occured getting random tile by tile type. Invalid game grid or tile type.";
+       
+        it('throws error when game grid is missing', () => {
+            expect(() => getRandomTileByType(null, GroundTexture.SAND)).toThrow(errorMessage);
+        });
+     
+        it('throws error when tile type is missing', () => {
+            const gameBoardArray = getGridArray({rows: 8, columns: 8});
+
+            expect(() => getRandomTileByType(gameBoardArray, null)).toThrow(errorMessage);
+        });
+    })
 });
 
 describe('createNewTile Gameboard Function', () => {
-//TODO
+    it('creates and returns a new tile', () => {
+        const newTile = createNewTile(GroundTexture.FOOD, {row: 10, column: 7});
+        const {row, column} = newTile.data.location;
+        const assertCorrectCoordinates = row === 10 && column === 7; 
+
+        expect(newTile.type).toEqual(GroundTexture.FOOD);
+        expect(assertCorrectCoordinates).toBeTruthy();
+    });
+
+    describe('error handling', () => {
+        const errorMessage = "Issue occurred creating a new tile. Invalid tile type or coordinates.";
+       
+        it('throws error when tile type is missing', () => {
+            expect(() => createNewTile(null, {row: 12, column: 20})).toThrow(errorMessage);
+        });
+     
+        it('throws error when coordinates are missing', () => {
+            expect(() => createNewTile(GroundTexture.SAND, null)).toThrow(errorMessage);
+        });
+    })
+
 });
 
 describe('addDropItemToBoard Gameboard Function', () => {
-//TODO
+    it('adds a drop item to the gameboard', () => {
+
+        const boardDimensions = {rows: 15, columns: 30};
+        const assertCoordinates = {row: 10, column: 7};
+        const {row, column} = assertCoordinates;
+        const assertTileType = GroundTexture.FOOD;
+
+        const gameGrid = getGridArray(boardDimensions);
+        const gameField = {tileGrid: gameGrid, boardSize: boardDimensions};
+        const updatedGameGrid = addDropItemToBoard(gameField, assertTileType, assertCoordinates);
+
+        expect(updatedGameGrid[row][column].type).toEqual(assertTileType);
+    });
+
+    describe('error handling', () => {
+        const errorMessage = "Issue occurred while dropping item to gameboard. Invalid gameField or random tile.";
+       
+        it('throws error when game field is missing', () => {
+            expect(() => addDropItemToBoard(null, GroundTexture.FOOD, {row: 12, column: 20})).toThrow(errorMessage);
+        });
+     
+        it('throws error when drop/tile type is missing', () => {
+            const boardDimensions = {rows: 15, columns: 30};
+            const gameGrid = getGridArray(boardDimensions);
+            const gameField = {tileGrid: gameGrid, boardSize: boardDimensions};
+
+            expect(() => addDropItemToBoard(gameField, null, {row: 12, column: 20})).toThrow(errorMessage);
+        });
+     
+        it('throws error when coordinates are missing', () => {
+            const boardDimensions = {rows: 15, columns: 30};
+            const gameGrid = getGridArray(boardDimensions);
+            const gameField = {tileGrid: gameGrid, boardSize: boardDimensions};
+
+            expect(() => addDropItemToBoard(gameField, GroundTexture.SAND, null)).toThrow(errorMessage);
+        });
+    })
 });

@@ -35,6 +35,8 @@ export const getTotalTiles = (dimensions: Dimension): number => {
 }
 
 export const getRandomTileByType = (board: GameGrid, newTileType: TileType): Tile => {
+    if(!board || !newTileType) throw new Error('Issue occured getting random tile by tile type. Invalid game grid or tile type.');
+
     const tilesMatchingDesiredType: Tile[] = board.flat().filter(tile => tile.type === newTileType);
 
     if (tilesMatchingDesiredType.length === 0) {
@@ -50,26 +52,21 @@ export const getRandomTileByType = (board: GameGrid, newTileType: TileType): Til
 export const createNewTile = (tileType: TileType, coordinates: GridCoordinates): Tile => {
     if(!tileType || !coordinates) throw new Error('Issue occurred creating a new tile. Invalid tile type or coordinates.');
 
-    const {row, column}: GridCoordinates = coordinates;
-
     const newTile: Tile = {
         type: tileType, 
         data: {
-            location: {
-                row: row, 
-                column: column
-            }
+            location: coordinates
         }
     }
 
     return newTile;
 };
 
-export const addDropItemToBoard = (gameField: GameField, randomTile: Tile): GameGrid => {
-    const {row, column} = randomTile.data.location;
-
-    // TODO: Add logic to randomize what is going to drop (food, ruby, coin, blackhole)
-    const tile: Tile = createNewTile(GroundTexture.FOOD, randomTile.data.location);
+export const addDropItemToBoard = (gameField: GameField, dropType: TileType, coordinates: GridCoordinates): GameGrid => {
+    if(!gameField || !dropType || !coordinates) throw new Error('Issue occurred while dropping item to gameboard. Invalid gameField or random tile.')
+    
+    const {row, column} = coordinates;
+    const tile: Tile = createNewTile(dropType, coordinates);
 
     let updateGameRow: Tile[] = [...gameField.tileGrid[row]];
     updateGameRow[column] = tile;
