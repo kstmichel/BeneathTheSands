@@ -3,9 +3,9 @@ import {useState, useEffect, useRef, useCallback} from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography, Box } from '@mui/material';
 import { GameTile } from '../../components/';
-import { WindowSize, GameData, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, Food, GridCoordinates} from '../../library/definitions';
+import { WindowSize, GameData, GameField, GameGrid, GameDimensions, Dimension, Device, Direction, NextMove, WormAnatomy, WormSegment, Tile, GroundTexture, GridCoordinates} from '../../library/definitions';
 import { getDeviceType } from '../../library/utils';
-import { getGridArray, getTotalTiles, calculateTileSize, getRandomTileByType, addDropItemToBoard } from '../../library/gameGrid';
+import { createGameField, getTotalTiles, calculateTileSize, getRandomTileByType, addDropItemToBoard } from '../../library/gameGrid';
 import { getNextMove, getOppositeDirection, getRandomizedNextMove } from '../../library/movement';
 import { setupWormPath, extendWormPath, addNewDirectionToWormPath, getDirectionByWormPath } from '../../library/navigation';
 import { validateNextMove, isBoundaryCollisionDetected } from '../../library/validation';
@@ -192,54 +192,22 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         setSandWorm([...growSandWormData]);
     }, [sandWorm, wormPath, wormLength]);
 
-    const createGameBoardGrid = useCallback(async(boardDimensions: Dimension): Promise<GameGrid> => {
-        if(!boardDimensions.rows || boardDimensions.rows === 0 || !boardDimensions.columns || boardDimensions.columns === 0) throw new Error('Cannot create game board.');
-
-        const gameDimensions: Dimension = {...boardDimensions};
-        let desertGameBoard: GameGrid = getGridArray(gameDimensions);
-
-        sandWorm.forEach((segment) => {
-            const {row, column} = segment.location;
-            const sandWormTile: Tile = {...desertGameBoard[row][column]};
-
-            desertGameBoard[row][column] = {
-                ...sandWormTile,
-                type: segment.part,
-                data: {...segment}
-            }
-        });
-
-        gameData.food.forEach((foodItem: Food) => {
-            const {row, column} = foodItem.location;
-            const foodTile: Tile = {...desertGameBoard[row][column]};
-
-            desertGameBoard[row][column] = {
-                ...foodTile,
-                type: GroundTexture.FOOD,
-                data: {...foodItem}
-            }
-        });
-
-        return Promise.resolve(desertGameBoard);
-     }, [sandWorm, gameData.food]);
-
     const initGameBoardGrid = useCallback(async(deviceType: Device) => {
         const gameDimensions: Dimension = {...GameDimensions[deviceType]}
-        const gameboardGrid = await createGameBoardGrid(gameDimensions);
-        const gamefield: GameField = {tileGrid: gameboardGrid, boardSize: gameDimensions};
-        const initialWormPath: Direction[] = setupWormPath(wormLength, wormDirection);
+        const gameboardField: GameField = await createGameField(gameDimensions, sandWorm, gameData.food);
         const tileSize: number = calculateTileSize(window, deviceType);
+        const initialWormPath: Direction[] = setupWormPath(wormLength, wormDirection);
 
         setDeviceType(deviceType);
+        setGameField(gameboardField);
         setTileSize(tileSize);
-        setGameField(gamefield);
         setWormPath(initialWormPath)
 
         // To Be Removed -- For Dev Purposes Only -- 
         const totalTiles: number = getTotalTiles(gameDimensions);
         setTotalTiles(totalTiles); 
 
-    }, [createGameBoardGrid, wormLength, wormDirection]);
+    }, [wormLength, wormDirection, sandWorm, gameData.food]);
 
     const handleKeyDown = (event: KeyboardEvent) => {
         switch (event.key) {
@@ -324,7 +292,7 @@ function GameBoard({windowSize, gameData}: GameBoardProps) {
         if (gameField.tileGrid.length > 0 && dropInventory.food > 0 && activeDropCount < maxActiveDrops) {
             const dropIsAddedToBoard = () => {
                 const randomValidSandTile: Tile = getRandomTileByType(gameField.tileGrid, GroundTexture.SAND);
-                const updatedTileGrid: GameGrid = addDropItemToBoard(gameField, randomValidSandTile);
+                const updatedTileGrid: GameGrid = addDropItemToBoard(gameField, GroundTexture.FOOD, randomValidSandTile.data.location);
 
                 setGameField((prevGameField) => ({...prevGameField, tileGrid: updatedTileGrid}));
                 setActiveDropCount((prevCount) => prevCount + 1);

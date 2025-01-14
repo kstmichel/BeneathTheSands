@@ -284,7 +284,7 @@ describe("Gameboard Rendering", () => {
 
   });
 
-  describe("Sandworm Behavior", () => {
+describe("Sandworm Behavior", () => {
     describe("Default Behavior (No Input)", () => {
       // Default Behavior Tests
 
