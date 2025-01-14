@@ -1,9 +1,13 @@
 import "@testing-library/jest-dom"; // Ensure this import is present
-import { Device } from './definitions';
+import { Device, GroundTexture, WormAnatomy } from './definitions';
 import { 
     getGridArray, 
+    createGameField,
     calculateTileSize,
-    getTotalTiles
+    getTotalTiles,
+    getRandomTileByType,
+    createNewTile,
+    addDropItemToBoard
 } from './gameGrid';
 
 describe('getGridArray Gameboard Function', () => {
@@ -35,6 +39,77 @@ describe('getGridArray Gameboard Function', () => {
         });
     });
 });      
+
+describe('createGameBoard Gameboard Function', () => {
+    it('should correctly initialize the game board with sandworm and food locations', async() => {
+        const boardDimensions = {rows: 20, columns: 15};
+        const wormLocation = [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ];
+          
+        const foodLocations = [
+            { variant: 'soulFood', location: {row: 3, column: 3 }},
+            { variant: 'soulFood', location: {row: 5, column: 5 }},
+            { variant: 'soulFood', location: {row: 2, column: 7 }},
+            { variant: 'soulFood', location: {row: 9, column: 9 }}
+        ];
+
+        const {tileGrid, boardSize} = await createGameField(boardDimensions, wormLocation, foodLocations);
+        
+        wormLocation.forEach((segment) => {
+            const {row, column} = segment.location;
+            const gameTile = tileGrid[row][column];
+            expect(gameTile.type).toEqual(segment.part);
+        })
+
+        foodLocations.forEach((food) => {
+            const {row, column} = food.location;
+            const gameTile = tileGrid[row][column];
+            expect(gameTile.type).toEqual(GroundTexture.FOOD);
+        })
+          
+        const assertSand = {row: 1, column: 2};
+        const {row, column} = assertSand;
+
+        expect(tileGrid[row][column].type).toEqual(GroundTexture.SAND);
+        expect(tileGrid).toBeDefined();
+        expect(boardSize).toBeDefined();
+    });
+
+    describe('error handling', () => {
+        const errorMissingDimensionsMessage = "Issue occurred while creating the game board. Invalid board dimensions.";
+        const errorMissingWormLocationOrFoodMessage = "Issue occurred while creating the game board. Invalid sandworm, or food locations."
+        const boardDimensions = {rows: 20, columns: 15};
+        const wormLocation = [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ];
+          
+          const foodLocations = [
+            { key: 1, variant: 'soulFood', location: {row: 3, column: 3 }},
+            { key: 1, variant: 'soulFood', location: {row: 5, column: 5 }},
+            { key: 1, variant: 'soulFood', location: {row: 7, column: 7 }},
+            { key: 1, variant: 'soulFood', location: {row: 9, column: 9 }}
+          ];
+
+        it('throws error when board dimensions are missing', () => {
+            expect(() => createGameField(null, wormLocation, foodLocations)).toThrow(errorMissingDimensionsMessage);
+        });
+
+        it('throws error when sandworm location is missing', () => {
+            expect(() => createGameField(boardDimensions, null, foodLocations)).toThrow(errorMissingWormLocationOrFoodMessage);
+        });
+
+        it('throws error when food locations are missing', () => {
+            expect(() => createGameField(boardDimensions, wormLocation, null)).toThrow(errorMissingWormLocationOrFoodMessage);
+        });
+    })
+});
 
 describe('calculateTileSize Gameboard Function', () => {
     it('returns tile size based on window dimension and device', () => {

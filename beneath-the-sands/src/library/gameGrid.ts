@@ -1,4 +1,4 @@
-import {Device, GameDimensions, Dimension, GameField, GameGrid, Tile, TileType, GroundTexture, GridCoordinates} from './definitions';
+import { Device, GameDimensions, Dimension, GameField, GameGrid, Tile, TileType, GroundTexture, GridCoordinates, WormSegment, Food } from './definitions';
 
 
 export const getGridArray = (dimensions: Dimension): GameGrid => {
@@ -12,6 +12,38 @@ export const getGridArray = (dimensions: Dimension): GameGrid => {
         )
     )
 };
+
+export const createGameField = (boardDimensions: Dimension, sandworm: WormSegment[], food: Food[] ): Promise<GameField> => {
+    if(!boardDimensions || !boardDimensions.rows || boardDimensions.rows === 0 || !boardDimensions.columns || boardDimensions.columns === 0) {
+        throw new Error('Issue occurred while creating the game board. Invalid board dimensions.');
+    }
+
+    if(!sandworm || !food) throw new Error('Issue occurred while creating the game board. Invalid sandworm, or food locations.')
+
+    const gameDimensions: Dimension = {...boardDimensions};
+    let gameboardGrid: GameGrid = getGridArray(gameDimensions);
+
+    sandworm.forEach((segment) => {
+        const {row, column} = segment.location;
+        let segmentTile: Tile = createNewTile(segment.part, segment.location);
+        segmentTile = {
+            ...segmentTile,
+            data: {
+                ...segmentTile.data,
+                key: segment.key,
+            } as WormSegment
+        };
+        
+        gameboardGrid[row][column] = segmentTile;
+    });
+
+    food.forEach((foodItem: Food) => {
+        const {row, column} = foodItem.location;
+        gameboardGrid[row][column] = createNewTile(GroundTexture.FOOD, foodItem.location);
+    });
+
+    return Promise.resolve({tileGrid: gameboardGrid, boardSize: boardDimensions} as GameField);
+ };
 
 export const calculateTileSize = (window: Window, deviceType: Device): number => {
     if(!window || !deviceType) throw new Error('Issue occurred during tile size calculation. Invalid window or device.');
