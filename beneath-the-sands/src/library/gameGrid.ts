@@ -1,5 +1,5 @@
-import { Device, GameDimensions, Dimension, GameField, GameGrid, Tile, TileType, GroundTexture, GridCoordinates, WormSegment, Food } from './definitions';
-
+import { Device, GameDimensions, Dimension, GameField, GameGrid, Direction, Tile, TileType, NextMove, GroundTexture, GridCoordinates, WormAnatomy, WormSegment, Food } from './definitions';
+import { getOppositeDirection, getNextMove } from './movement';
 
 export const getGridArray = (dimensions: Dimension): GameGrid => {
     if(!dimensions.rows || dimensions.rows === 0 || !dimensions.columns || dimensions.columns === 0 ) {
@@ -107,4 +107,39 @@ export const addDropItemToBoard = (gameField: GameField, dropType: TileType, coo
     updateTileGrid[row] = [...updateGameRow];
 
     return updateTileGrid;
+};
+
+export const addWormSegment = (sandWorm: WormSegment[], wormPath: Direction[]): WormSegment[] => {
+    if(!sandWorm || sandWorm.length === 0 || !wormPath || wormPath.length === 0) throw new Error('Unable to add worm segment. Invalid sandworm location, worm length, or worm path.')
+    
+    let growSandWormData: WormSegment[]= [...sandWorm];
+    const tailIndex: number = growSandWormData.length - 1;
+    const newBody = {...growSandWormData[tailIndex]};
+
+    newBody.part = WormAnatomy.BODY;
+
+    growSandWormData.splice(tailIndex, 0, newBody);
+
+    // update key and location for each sandworm segment
+    growSandWormData = growSandWormData.map((segment, index) => {
+        let newLocation: GridCoordinates = {...segment.location};
+
+        if (segment.part === WormAnatomy.TAIL) {
+            // to give the illusion the sandworm grew, update tail coordinate by locating the tile behind sandworm
+            const oppositeDirection = getOppositeDirection(wormPath[tailIndex])
+            const nextMove: NextMove = getNextMove(newLocation, oppositeDirection);
+
+            newLocation = nextMove.coordinates;
+        }   
+
+        return {
+            key: index,
+            part: segment.part,
+            location: {
+                ...newLocation
+            }
+        } as WormSegment
+    });
+
+    return [...growSandWormData];
 };

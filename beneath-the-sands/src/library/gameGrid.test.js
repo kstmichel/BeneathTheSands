@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom"; // Ensure this import is present
-import { Device, GroundTexture, WormAnatomy } from './definitions';
+import { Device, Direction, GroundTexture, WormAnatomy } from './definitions';
 import { 
     getGridArray, 
     createGameField,
@@ -7,7 +7,8 @@ import {
     getTotalTiles,
     getRandomTileByType,
     createNewTile,
-    addDropItemToBoard
+    addDropItemToBoard,
+    addWormSegment
 } from './gameGrid';
 
 describe('getGridArray Gameboard Function', () => {
@@ -227,6 +228,51 @@ describe('addDropItemToBoard Gameboard Function', () => {
             const gameField = {tileGrid: gameGrid, boardSize: boardDimensions};
 
             expect(() => addDropItemToBoard(gameField, GroundTexture.SAND, null)).toThrow(errorMessage);
+        });
+    })
+});
+
+describe('addWormSegment Gameboard Function', () => {
+    it('adds a new body segment to the Sandworm', () => {
+
+        const sandwormData = [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ];
+
+        const wormPath = [Direction.UP, Direction.RIGHT, Direction.RIGHT, Direction.RIGHT];
+
+        const updatedSandwormSegments = addWormSegment(sandwormData, wormPath);
+        const assertSandwormData = [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.BODY, location: { row: 7, column: 7 } },
+            { key: 4, part: WormAnatomy.TAIL, location: { row: 7, column: 6 } },
+          ];
+
+        expect(updatedSandwormSegments).toEqual(assertSandwormData);
+    });
+
+    describe('error handling', () => {
+        const errorMessage = "Unable to add worm segment. Invalid sandworm location, worm length, or worm path.";
+        const sandwormData = [
+            { key: 0, part: WormAnatomy.HEAD, location: { row: 7, column: 10 } },
+            { key: 1, part: WormAnatomy.BODY, location: { row: 7, column: 9 } },
+            { key: 2, part: WormAnatomy.BODY, location: { row: 7, column: 8 } },
+            { key: 3, part: WormAnatomy.TAIL, location: { row: 7, column: 7 } },
+          ];
+
+        const wormPath = [Direction.UP, Direction.RIGHT, Direction.RIGHT, Direction.RIGHT];
+        
+        it('throws error when sandworm data is missing', () => {
+            expect(() => addWormSegment(null, wormPath)).toThrow(errorMessage);
+        });
+     
+        it('throws error when wormPath is missing', () => {
+            expect(() => addWormSegment(sandwormData, null,)).toThrow(errorMessage);
         });
     })
 });
